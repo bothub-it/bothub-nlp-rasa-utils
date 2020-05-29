@@ -1,7 +1,7 @@
-from pipeline_builder import get_rasa_nlu_config_from_update
+from .pipeline_builder import get_rasa_nlu_config_from_update
 
 from rasa.nlu.training_data.formats.readerwriter import TrainingDataWriter
-from utils import backend
+from .utils import backend
 
 
 class BothubWriter(TrainingDataWriter):
