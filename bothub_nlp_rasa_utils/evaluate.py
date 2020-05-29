@@ -16,8 +16,8 @@ from rasa.nlu.test import substitute_labels
 from rasa.nlu.training_data import Message
 from rasa.nlu.training_data import TrainingData
 
-from utils import backend
-from utils import update_interpreters
+from .utils import backend
+from .utils import update_interpreters
 
 logger = logging.getLogger(__name__)
 
