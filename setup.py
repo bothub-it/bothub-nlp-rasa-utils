@@ -1,5 +1,8 @@
 from setuptools import setup, find_packages
 
+extras_requires = {
+    "spacy": ["spacy>=2.1,<2.2"],
+}
 
 setup(
     name='bothub_nlp_rasa_utils',
@@ -9,4 +12,5 @@ setup(
     install_requires=[
         'rasa==1.10.1',
     ],
+    extras_require=extras_requires,
 )
