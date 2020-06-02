@@ -11,7 +11,7 @@ from rasa.nlu.utils import json_to_string
 from .utils import PokeLogging
 from .utils import backend
 from .persistor import BothubPersistor
-from . import logger
+from bothub_nlp_rasa_utils import logger
 from .pipeline_builder import get_rasa_nlu_config_from_update
 
 from rasa.nlu.training_data.formats.readerwriter import TrainingDataWriter
