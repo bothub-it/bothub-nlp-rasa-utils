@@ -2,6 +2,7 @@ import json
 import logging
 import uuid
 
+from rasa.nlu import __version__ as rasa_version
 from rasa.nlu.test import get_entity_extractors, plot_attribute_confidences
 from rasa.nlu.test import get_evaluation_metrics
 from rasa.nlu.test import (
@@ -383,7 +384,7 @@ def merge_intent_entity_log(intent_evaluation, entity_evaluation):
     return merged_logs
 
 
-def evaluate_update(repository_version, by, repository_authorization):
+def evaluate_update(repository_version, repository_authorization):
     evaluations = backend().request_backend_start_evaluation(
         repository_version, repository_authorization
     )
