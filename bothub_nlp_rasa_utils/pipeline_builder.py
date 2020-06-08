@@ -2,7 +2,7 @@ from rasa.nlu.config import RasaNLUModelConfig
 
 
 def add_spacy_nlp():
-    return {"name": "bothub_nlp_nlu.pipeline_components.spacy_nlp.SpacyNLP"}
+    return {"name": "pipeline_components.spacy_nlp.SpacyNLP"}
 
 
 def add_whitespace_tokenizer():
@@ -11,7 +11,7 @@ def add_whitespace_tokenizer():
 
 def add_preprocessing(update):
     return {
-        "name": "bothub_nlp_nlu.pipeline_components.preprocessing.Preprocessing",
+        "name": "pipeline_components.preprocessing.Preprocessing",
         "language": update.get("language"),
     }
 
