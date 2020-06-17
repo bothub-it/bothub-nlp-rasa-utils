@@ -1,5 +1,10 @@
 from rasa.nlu.config import RasaNLUModelConfig
 
+
+def add_spacy_nlp():
+    return {"name": "pipeline_components.spacy_nlp.SpacyNLP"}
+
+
 def add_whitespace_tokenizer():
     return {"name": "WhitespaceTokenizer"}
 
@@ -42,55 +47,81 @@ def add_diet_classifier():
     return {"name": "DIETClassifier", "entity_recognition": False, "BILOU_flag": False}
 
 
+def add_entity_extractor(pipeline):
+    pipeline.append(
+        {
+            "name": "LexicalSyntacticFeaturizer",
+            "features": [
+                ["low", "title", "upper"],
+                [
+                    "BOS",
+                    "EOS",
+                    "low",
+                    "prefix5",
+                    "prefix2",
+                    "suffix5",
+                    "suffix3",
+                    "suffix2",
+                    "upper",
+                    "title",
+                    "digit",
+                ],
+                ["low", "title", "upper"],
+            ],
+        }
+    )
+    pipeline.append(
+        {
+            "name": "pipeline_components.diet_classifier.DIETClassifierCustom",
+            "intent_classification": False,
+            "entity_recognition": True,
+            "use_masked_language_model": False,
+            "number_of_transformer_layers": 0,
+        }
+    )
+    return pipeline
+
+
 def legacy_internal_config(update):
     pipeline = [
         add_whitespace_tokenizer(),  # Tokenizer
         add_countvectors_featurizer(update),  # Featurizer
         add_embedding_intent_classifier(),  # Intent Classifier
     ]
-
     return pipeline
 
 
 def legacy_external_config(update):
     pipeline = [
-        {"name": "SpacyNLP"},  # Language Model
         {"name": "SpacyTokenizer"},  # Tokenizer
         {"name": "SpacyFeaturizer"},  # Spacy Featurizer
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
         add_embedding_intent_classifier(),  # intent classifier
     ]
-
     return pipeline
 
 
 def transformer_network_diet_config(update):
     pipeline = [
-        add_preprocessing(update),  # Preprocessing
-        add_whitespace_tokenizer(),  # Tokenizer
+        add_whitespace_tokenizer(),
         add_countvectors_featurizer(update),  # Featurizer
         add_diet_classifier(),  # Intent Classifier
     ]
-
     return pipeline
 
 
 def transformer_network_diet_word_embedding_config(update):
     pipeline = [
-        add_preprocessing(update),  # Preprocessing
-        {"name": "SpacyNLP"},  # Language Model
         {"name": "SpacyTokenizer"},  # Tokenizer
         {"name": "SpacyFeaturizer"},  # Spacy Featurizer
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
         add_diet_classifier(),  # Intent Classifier
     ]
-
     return pipeline
 
 
 def transformer_network_diet_bert_config(update):
     pipeline = [
-        add_preprocessing(update),
         {  # NLP
             "name": "pipeline_components.HFTransformerNLP.HFTransformersNLP",
             "model_name": "bert_portuguese",
@@ -106,26 +137,40 @@ def transformer_network_diet_bert_config(update):
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
         add_diet_classifier(),  # Intent Classifier
     ]
-
     return pipeline
 
 
 def get_rasa_nlu_config_from_update(update):  # pragma: no cover
+    spacy_algorithms = [
+        "neural_network_external",
+        "transformer_network_diet_word_embedding",
+    ]
+    pipeline = []
+    if "transformer" in update.get("algorithm"):
+        pipeline.append(add_preprocessing(update))
+    if update.get("use_name_entities") or update.get("algorithm") in spacy_algorithms:
+        pipeline.append(add_spacy_nlp())
+
     if update.get("algorithm") == "neural_network_internal":
-        pipeline = legacy_internal_config(update)
+        pipeline.extend(legacy_internal_config(update))
     elif update.get("algorithm") == "neural_network_external":
-        pipeline = legacy_external_config(update)
+        pipeline.extend(legacy_external_config(update))
     elif update.get("algorithm") == "transformer_network_diet":
-        pipeline = transformer_network_diet_config(update)
+        pipeline.extend(transformer_network_diet_config(update))
     elif update.get("algorithm") == "transformer_network_diet_word_embedding":
-        pipeline = transformer_network_diet_word_embedding_config(update)
+        pipeline.extend(transformer_network_diet_word_embedding_config(update))
     elif update.get("algorithm") == "transformer_network_diet_bert":
-        pipeline = transformer_network_diet_bert_config(update)
+        pipeline.extend(transformer_network_diet_bert_config(update))
     else:
         return
 
     # entity extractor
-    pipeline.append({"name": "CRFEntityExtractor"})
+    pipeline.append(
+        {
+            "name": "pipeline_components.crf_entity_extractor.CRFEntityExtractor"
+        }
+    )
+    # pipeline = add_entity_extractor(pipeline)
 
     # spacy named entity recognition
     if update.get("use_name_entities"):
@@ -134,4 +179,3 @@ def get_rasa_nlu_config_from_update(update):  # pragma: no cover
     return RasaNLUModelConfig(
         {"language": update.get("language"), "pipeline": pipeline}
     )
-

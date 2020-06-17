@@ -10,39 +10,12 @@ from rasa.nlu.utils import json_to_string
 
 from .utils import PokeLogging
 from .utils import backend
+from .utils import get_examples_request
 from .persistor import BothubPersistor
-from . import logger
+from bothub_nlp_rasa_utils import logger
 from .pipeline_builder import get_rasa_nlu_config_from_update
 
 from rasa.nlu.training_data.formats.readerwriter import TrainingDataWriter
-
-
-class BothubWriter(TrainingDataWriter):
-    def dumps(self, training_data, **kwargs):  # pragma: no cover
-        js_entity_synonyms = defaultdict(list)
-        for k, v in training_data.entity_synonyms.items():
-            if k != v:
-                js_entity_synonyms[v].append(k)
-
-        formatted_synonyms = [
-            {"value": value, "synonyms": syns}
-            for value, syns in js_entity_synonyms.items()
-        ]
-
-        formatted_examples = [
-            example.as_dict() for example in training_data.training_examples
-        ]
-
-        return json_to_string(
-            {
-                "rasa_nlu_data": {
-                    "common_examples": formatted_examples,
-                    "regex_features": training_data.regex_features,
-                    "entity_synonyms": formatted_synonyms,
-                }
-            },
-            **kwargs,
-        )
 
 
 def train_update(repository_version, by, repository_authorization):  # pragma: no cover

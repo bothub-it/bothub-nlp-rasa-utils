@@ -45,7 +45,9 @@ def get_examples_request(update_id, repository_authorization):  # pragma: no cov
 class UpdateInterpreters:
     interpreters = {}
 
-    def get(self, repository_version, repository_authorization, use_cache=True):
+    def get(
+        self, repository_version, repository_authorization, rasa_version, use_cache=True
+    ):
         update_request = backend().request_backend_parse_nlu(
             repository_version, repository_authorization
         )
@@ -60,13 +62,16 @@ class UpdateInterpreters:
 
         if interpreter and use_cache:
             return interpreter
-        persistor = BothubPersistor(repository_version, repository_authorization)
+        persistor = BothubPersistor(
+            repository_version, repository_authorization, rasa_version
+        )
         model_directory = mkdtemp()
         persistor.retrieve(str(update_request.get("repository_uuid")), model_directory)
         self.interpreters[repository_name] = Interpreter(
             None, {"language": update_request.get("language")}
         ).load(model_directory, components.ComponentBuilder(use_cache=False))
-        return self.get(repository_version, repository_authorization)
+        return self.get(repository_version, repository_authorization, rasa_version)
+
 
 
 class PokeLoggingHandler(logging.StreamHandler):
@@ -101,7 +106,6 @@ class PokeLogging:
 
     def __exit__(self, *args):
         self.logger.removeHandler(self.logger)
-
 
 
 update_interpreters = UpdateInterpreters()
