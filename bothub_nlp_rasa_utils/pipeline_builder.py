@@ -2,7 +2,7 @@ from rasa.nlu.config import RasaNLUModelConfig
 
 
 def add_spacy_nlp():
-    return {"name": "pipeline_components.spacy_nlp.SpacyNLP"}
+    return {"name": "bothub_nlp_nlu.pipeline_components.spacy_nlp.SpacyNLP"}
 
 
 def add_whitespace_tokenizer():
@@ -11,7 +11,7 @@ def add_whitespace_tokenizer():
 
 def add_preprocessing(update):
     return {
-        "name": "pipeline_components.preprocessing.Preprocessing",
+        "name": "bothub_nlp_nlu.pipeline_components.preprocessing.Preprocessing",
         "language": update.get("language"),
     }
 
@@ -72,7 +72,7 @@ def add_entity_extractor(pipeline):
     )
     pipeline.append(
         {
-            "name": "pipeline_components.diet_classifier.DIETClassifierCustom",
+            "name": "bothub_nlp_nlu.pipeline_components.diet_classifier.DIETClassifierCustom",
             "intent_classification": False,
             "entity_recognition": True,
             "use_masked_language_model": False,
@@ -123,16 +123,16 @@ def transformer_network_diet_word_embedding_config(update):
 def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
-            "name": "pipeline_components.HFTransformerNLP.HFTransformersNLP",
+            "name": "bothub_nlp_nlu.pipeline_components.HFTransformerNLP.HFTransformersNLP",
             "model_name": "bert_portuguese",
         },
         {  # Tokenizer
-            "name": "pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
+            "name": "bothub_nlp_nlu.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
             "intent_tokenization_flag": False,
             "intent_split_symbol": "_",
         },
         {  # Bert Featurizer
-            "name": "pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
+            "name": "bothub_nlp_nlu.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
         },
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
         add_diet_classifier(),  # Intent Classifier
@@ -167,7 +167,7 @@ def get_rasa_nlu_config_from_update(update):  # pragma: no cover
     # entity extractor
     pipeline.append(
         {
-            "name": "pipeline_components.crf_entity_extractor.CRFEntityExtractor"
+            "name": "bothub_nlp_nlu.pipeline_components.crf_entity_extractor.CRFEntityExtractor"
         }
     )
     # pipeline = add_entity_extractor(pipeline)
