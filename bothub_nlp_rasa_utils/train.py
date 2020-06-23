@@ -18,9 +18,9 @@ from .pipeline_builder import get_rasa_nlu_config_from_update
 from rasa.nlu.training_data.formats.readerwriter import TrainingDataWriter
 
 
-def train_update(repository_version, by, repository_authorization):  # pragma: no cover
+def train_update(repository_version, by, repository_authorization, from_queue='celery'):  # pragma: no cover
     update_request = backend().request_backend_start_training_nlu(
-        repository_version, by, repository_authorization
+        repository_version, by, repository_authorization, from_queue
     )
 
     examples_list = get_examples_request(repository_version, repository_authorization)
