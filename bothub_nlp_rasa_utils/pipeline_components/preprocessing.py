@@ -53,7 +53,7 @@ class Preprocessing(Component):
         size = len(training_data.training_examples)
         subtract_idx = 0
 
-        PREPROCESS_FACTORY = PreprocessFactory().get_preprocess(config.language)
+        PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(config.language)
 
         for idx in range(size):
             example_text = training_data.training_examples[idx - subtract_idx].text
@@ -80,6 +80,6 @@ class Preprocessing(Component):
         for APOSTROPHE in APOSTROPHE_OPTIONS:
             message.text = message.text.replace(APOSTROPHE, "")
         
-        PREPROCESS_FACTORY = PreprocessFactory().get_preprocess(config.language)
+        PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(config.language)
 
         PREPROCESS_FACTORY.preprocess(message.text)

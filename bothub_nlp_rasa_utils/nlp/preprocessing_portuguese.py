@@ -1,4 +1,4 @@
-from preprocessing_interface import PreprocessingInterface
+from .preprocessing_interface import PreprocessingInterface
 
 class PreprocessingPortuguese(PreprocessingInterface):
     
