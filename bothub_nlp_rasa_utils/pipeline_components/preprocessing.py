@@ -6,7 +6,7 @@ from rasa.nlu.components import Component
 from rasa.nlu.config import RasaNLUModelConfig
 from rasa.nlu.training_data import Message, TrainingData
 
-from ..nlp.preprocess_factory import PreprocessFactory
+from ..nlp.preprocessing_factory import PreprocessingFactory
 
 class Preprocessing(Component):
 
