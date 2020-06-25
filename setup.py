@@ -10,7 +10,7 @@ setup(
     description='Bothub NLP Rasa Utils',
     packages=find_packages(),
     install_requires=[
-        'rasa==1.10.1',
+        'rasa==1.10.3',
     ],
     extras_require=extras_requires,
 )
