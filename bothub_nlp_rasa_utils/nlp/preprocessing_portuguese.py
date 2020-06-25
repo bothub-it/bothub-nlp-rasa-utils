@@ -1,7 +1,8 @@
 from .preprocessing_interface import PreprocessingInterface
+import re
+
 
 class PreprocessingPortuguese(PreprocessingInterface):
-    
 
     def preprocess(self, phrase: str = None):
 

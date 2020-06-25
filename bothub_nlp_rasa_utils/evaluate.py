@@ -4,8 +4,7 @@ import uuid
 
 from rasa.nlu import __version__ as rasa_version
 from rasa.nlu.test import get_entity_extractors, plot_attribute_confidences
-from rasa.test import get_evaluation_metrics
-import rasa.utils.plotting as plot_utils
+from rasa.nlu.test import get_evaluation_metrics
 from rasa.nlu.test import (
     merge_labels,
     _targets_predictions_from,
@@ -13,6 +12,7 @@ from rasa.nlu.test import (
     get_eval_data,
     align_all_entity_predictions,
 )
+from rasa.nlu.test import plot_confusion_matrix
 from rasa.nlu.test import substitute_labels
 from rasa.nlu.training_data import Message
 from rasa.nlu.training_data import TrainingData
@@ -270,7 +270,7 @@ def plot_and_save_charts(update, intent_results):  # pragma: no cover
 
         cnf_matrix = confusion_matrix(targets, predictions)
         labels = unique_labels(targets, predictions)
-        plot_utils.plot_confusion_matrix(
+        plot_confusion_matrix(
             cnf_matrix, classes=labels, title="Intent Confusion matrix"
         )
 

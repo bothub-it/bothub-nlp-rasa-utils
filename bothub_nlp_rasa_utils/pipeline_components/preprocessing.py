@@ -25,19 +25,17 @@ class Preprocessing(Component):
     defaults = {"language": None}
 
     def __init__(
-        self, component_config: Optional[Dict[Text, Any]] = None, language: str = None
+        self, component_config: Optional[Dict[Text, Any]] = None
     ) -> None:
         super().__init__(component_config)
-        self.language = component_config.get("language")
+        self.language = "es"
 
 
     @classmethod
     def create(
         cls, component_config: Dict[Text, Any], config: RasaNLUModelConfig
     ) -> "Preprocessing":
-        # component_config = override_defaults(cls.defaults, component_config)
-        language = config.language
-        return cls(component_config, language)
+        return cls(component_config)
 
     def provide_context(self) -> Dict[Text, Any]:
         return {"language": self.language}
@@ -53,7 +51,7 @@ class Preprocessing(Component):
         size = len(training_data.training_examples)
         subtract_idx = 0
 
-        PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(config.language)
+        PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(self.language)
 
         for idx in range(size):
             example_text = training_data.training_examples[idx - subtract_idx].text
@@ -80,6 +78,6 @@ class Preprocessing(Component):
         for APOSTROPHE in APOSTROPHE_OPTIONS:
             message.text = message.text.replace(APOSTROPHE, "")
         
-        PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(config.language)
+        PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(self.language)
 
-        PREPROCESS_FACTORY.preprocess(message.text)
+        message.text = PREPROCESS_FACTORY.preprocess(message.text)

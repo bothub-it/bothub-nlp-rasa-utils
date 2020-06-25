@@ -11,7 +11,7 @@ class PreprocessingFactory:
         try:
             if language == "en":
                 return PreprocessingEnglish()
-            if language == "pt_br":
+            elif language == "pt_br":
                 return PreprocessingPortuguese()
             raise AssertionError("Language Not Found")
 
