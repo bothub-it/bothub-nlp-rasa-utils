@@ -1,4 +1,6 @@
 from .preprocessing_interface import PreprocessingInterface
+from .preprocessing_base import PreprocessingBase
+
 import re
 
 
@@ -8,6 +10,8 @@ class PreprocessingEnglish(PreprocessingInterface):
 
         if phrase == None:
             return
+        
+        phrase = PreprocessingBase.preprocessing(phrase)
         
         # set regex for "mkt":
         mkt_regex = r"\b(mkt)\b"

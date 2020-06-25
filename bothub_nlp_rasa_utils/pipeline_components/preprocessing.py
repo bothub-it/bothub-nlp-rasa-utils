@@ -1,4 +1,3 @@
-from unidecode import unidecode
 import re
 from typing import Any, Optional, Text, Dict, List, Type
 
@@ -55,8 +54,6 @@ class Preprocessing(Component):
 
         for idx in range(size):
             example_text = training_data.training_examples[idx - subtract_idx].text
-            # removing accent and lowercasing characters
-            example_text = unidecode(example_text.lower())
 
             PREPROCESS_FACTORY.preprocess(example_text)
 
@@ -72,8 +69,6 @@ class Preprocessing(Component):
         """Process an incoming message."""
         APOSTROPHE_OPTIONS = ["'", "`"]
 
-        # removing accent and lowercasing characters
-        message.text = unidecode(message.text.lower())
         # remove apostrophe from the phrase (important be first than s_regex regex)
         for APOSTROPHE in APOSTROPHE_OPTIONS:
             message.text = message.text.replace(APOSTROPHE, "")

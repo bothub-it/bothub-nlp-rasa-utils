@@ -1,13 +1,17 @@
 from .preprocessing_interface import PreprocessingInterface
+from .preprocessing_base import PreprocessingBase
+
 import re
 
 
 class PreprocessingPortuguese(PreprocessingInterface):
 
     def preprocess(self, phrase: str = None):
-
+        
         if phrase == None:
             return
+
+        phrase = PreprocessingBase.preprocessing(phrase)
 
         phrase = phrase.replace("blza", "beleza")
         phrase = phrase.replace("flw", "falou")
