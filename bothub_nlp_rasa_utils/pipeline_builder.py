@@ -1,12 +1,6 @@
 from rasa.nlu.config import RasaNLUModelConfig
 from bothub_nlp_celery import settings
 
-def backend():
-    return bothub_backend.get_backend(
-        "bothub_backend.bothub.BothubBackend",
-        config("BOTHUB_ENGINE_URL", default="https://api.bothub.it"),
-    )
-
 
 def add_spacy_nlp():
     return {"name": "bothub_nlp_rasa_utils.pipeline_components.spacy_nlp.SpacyNLP"}
