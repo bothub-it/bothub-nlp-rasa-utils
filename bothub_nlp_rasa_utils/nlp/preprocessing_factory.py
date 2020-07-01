@@ -4,6 +4,7 @@ from .preprocessing_base import PreprocessingBase
 from .preprocessing_english import PreprocessingEnglish
 from .preprocessing_portuguese import PreprocessingPortuguese
 
+
 class PreprocessingFactory:
     """The Factory Class"""
 
