@@ -1,8 +1,9 @@
 from rasa.nlu.config import RasaNLUModelConfig
+from bothub_nlp_celery import settings
 
 
 def add_spacy_nlp():
-    return {"name": "pipeline_components.spacy_nlp.SpacyNLP"}
+    return {"name": "bothub_nlp_rasa_utils.pipeline_components.spacy_nlp.SpacyNLP"}
 
 
 def add_whitespace_tokenizer():
@@ -11,7 +12,7 @@ def add_whitespace_tokenizer():
 
 def add_preprocessing(update):
     return {
-        "name": "pipeline_components.preprocessing.Preprocessing",
+        "name": "bothub_nlp_rasa_utils.pipeline_components.preprocessing.Preprocessing",
         "language": update.get("language"),
     }
 
@@ -43,7 +44,9 @@ def add_embedding_intent_classifier():
     }
 
 
-def add_diet_classifier():
+def add_diet_classifier(update):
+    if update.get("use_transformer_entities"):
+        return {"name": "DIETClassifier"}
     return {"name": "DIETClassifier", "entity_recognition": False, "BILOU_flag": False}
 
 
@@ -72,7 +75,7 @@ def add_entity_extractor(pipeline):
     )
     pipeline.append(
         {
-            "name": "pipeline_components.diet_classifier.DIETClassifierCustom",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
             "intent_classification": False,
             "entity_recognition": True,
             "use_masked_language_model": False,
@@ -105,7 +108,7 @@ def transformer_network_diet_config(update):
     pipeline = [
         add_whitespace_tokenizer(),
         add_countvectors_featurizer(update),  # Featurizer
-        add_diet_classifier(),  # Intent Classifier
+        add_diet_classifier(update),  # Intent Classifier
     ]
     return pipeline
 
@@ -115,7 +118,7 @@ def transformer_network_diet_word_embedding_config(update):
         {"name": "SpacyTokenizer"},  # Tokenizer
         {"name": "SpacyFeaturizer"},  # Spacy Featurizer
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
-        add_diet_classifier(),  # Intent Classifier
+        add_diet_classifier(update),  # Intent Classifier
     ]
     return pipeline
 
@@ -123,19 +126,64 @@ def transformer_network_diet_word_embedding_config(update):
 def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
-            "name": "pipeline_components.HFTransformerNLP.HFTransformersNLP",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.HFTransformerNLP.HFTransformersNLP",
             "model_name": "bert_portuguese",
         },
         {  # Tokenizer
-            "name": "pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
             "intent_tokenization_flag": False,
             "intent_split_symbol": "_",
         },
         {  # Bert Featurizer
-            "name": "pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
+            "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
         },
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
         add_diet_classifier(),  # Intent Classifier
+    ]
+    return pipeline
+
+
+def entitity_extractor():
+    pipeline = [
+        {
+            "name": "LexicalSyntacticFeaturizer",
+            "features": [
+                ["low", "title", "upper"],
+                [
+                    "BOS",
+                    "EOS",
+                    "low",
+                    "prefix5",
+                    "prefix2",
+                    "suffix5",
+                    "suffix3",
+                    "suffix2",
+                    "upper",
+                    "title",
+                    "digit",
+                ],
+                ["low", "title", "upper"],
+            ],
+        },
+        {
+            "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
+            "intent_classification": False,
+            "entity_recognition": True,
+            "use_masked_language_model": False,
+            "number_of_transformer_layers": 0,
+        },
+    ]
+    return pipeline
+
+
+def transformer_entitity_extractor():
+    pipeline = [
+        {
+            "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
+            "intent_classification": False,
+            "entity_recognition": True,
+            "use_masked_language_model": False,
+        }
     ]
     return pipeline
 
@@ -165,12 +213,15 @@ def get_rasa_nlu_config_from_update(update):  # pragma: no cover
         return
 
     # entity extractor
-    pipeline.append(
-        {
-            "name": "pipeline_components.crf_entity_extractor.CRFEntityExtractor"
-        }
-    )
-    # pipeline = add_entity_extractor(pipeline)
+    if update.get("use_transformer_entities") and "transformer" not in update.get(
+        "algorithm"
+    ):
+        pipeline.extend(transformer_entitity_extractor())
+    elif "transformer" not in update.get("algorithm") or (
+        "transformer" in update.get("algorithm")
+        and not update.get("use_transformer_entities")
+    ):
+        pipeline.extend(entitity_extractor())
 
     # spacy named entity recognition
     if update.get("use_name_entities"):
