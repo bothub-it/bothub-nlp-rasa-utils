@@ -1,7 +1,6 @@
 from rasa.nlu.config import RasaNLUModelConfig
 from bothub_nlp_celery import settings
 
-
 def backend():
     return bothub_backend.get_backend(
         "bothub_backend.bothub.BothubBackend",
@@ -133,8 +132,8 @@ def transformer_network_diet_word_embedding_config(update):
 def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
-            "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
-            "model_name": "bert",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.HFTransformerNLP.HFTransformersNLP",
+            "model_name": "bert_portuguese",
         },
         {  # Tokenizer
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
@@ -145,7 +144,7 @@ def transformer_network_diet_bert_config(update):
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
         },
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
-        add_diet_classifier(update),  # Intent Classifier
+        add_diet_classifier(),  # Intent Classifier
     ]
     return pipeline
 
