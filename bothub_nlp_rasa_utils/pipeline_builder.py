@@ -38,51 +38,14 @@ def add_embedding_intent_classifier():
         "number_of_transformer_layers": 0,
         "weight_sparsity": 0,
         "intent_classification": True,
-        "entity_recognition": False,
+        "entity_recognition": True,
         "use_masked_language_model": False,
         "BILOU_flag": False,
     }
 
 
-def add_diet_classifier(update):
-    if update.get("use_transformer_entities"):
-        return {"name": "DIETClassifier"}
-    return {"name": "DIETClassifier", "entity_recognition": False, "BILOU_flag": False}
-
-
-def add_entity_extractor(pipeline):
-    pipeline.append(
-        {
-            "name": "LexicalSyntacticFeaturizer",
-            "features": [
-                ["low", "title", "upper"],
-                [
-                    "BOS",
-                    "EOS",
-                    "low",
-                    "prefix5",
-                    "prefix2",
-                    "suffix5",
-                    "suffix3",
-                    "suffix2",
-                    "upper",
-                    "title",
-                    "digit",
-                ],
-                ["low", "title", "upper"],
-            ],
-        }
-    )
-    pipeline.append(
-        {
-            "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
-            "intent_classification": False,
-            "entity_recognition": True,
-            "use_masked_language_model": False,
-            "number_of_transformer_layers": 0,
-        }
-    )
-    return pipeline
+def add_diet_classifier():
+    return {"name": "DIETClassifier", "entity_recognition": True, "BILOU_flag": False}
 
 
 def legacy_internal_config(update):
@@ -108,7 +71,7 @@ def transformer_network_diet_config(update):
     pipeline = [
         add_whitespace_tokenizer(),
         add_countvectors_featurizer(update),  # Featurizer
-        add_diet_classifier(update),  # Intent Classifier
+        add_diet_classifier(),  # Intent Classifier
     ]
     return pipeline
 
@@ -118,7 +81,7 @@ def transformer_network_diet_word_embedding_config(update):
         {"name": "SpacyTokenizer"},  # Tokenizer
         {"name": "SpacyFeaturizer"},  # Spacy Featurizer
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
-        add_diet_classifier(update),  # Intent Classifier
+        add_diet_classifier(),  # Intent Classifier
     ]
     return pipeline
 
@@ -139,51 +102,6 @@ def transformer_network_diet_bert_config(update):
         },
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
         add_diet_classifier(),  # Intent Classifier
-    ]
-    return pipeline
-
-
-def entitity_extractor():
-    pipeline = [
-        {
-            "name": "LexicalSyntacticFeaturizer",
-            "features": [
-                ["low", "title", "upper"],
-                [
-                    "BOS",
-                    "EOS",
-                    "low",
-                    "prefix5",
-                    "prefix2",
-                    "suffix5",
-                    "suffix3",
-                    "suffix2",
-                    "upper",
-                    "title",
-                    "digit",
-                ],
-                ["low", "title", "upper"],
-            ],
-        },
-        {
-            "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
-            "intent_classification": False,
-            "entity_recognition": True,
-            "use_masked_language_model": False,
-            "number_of_transformer_layers": 0,
-        },
-    ]
-    return pipeline
-
-
-def transformer_entitity_extractor():
-    pipeline = [
-        {
-            "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
-            "intent_classification": False,
-            "entity_recognition": True,
-            "use_masked_language_model": False,
-        }
     ]
     return pipeline
 
@@ -211,17 +129,6 @@ def get_rasa_nlu_config_from_update(update):  # pragma: no cover
         pipeline.extend(transformer_network_diet_bert_config(update))
     else:
         return
-
-    # entity extractor
-    if update.get("use_transformer_entities") and "transformer" not in update.get(
-        "algorithm"
-    ):
-        pipeline.extend(transformer_entitity_extractor())
-    elif "transformer" not in update.get("algorithm") or (
-        "transformer" in update.get("algorithm")
-        and not update.get("use_transformer_entities")
-    ):
-        pipeline.extend(entitity_extractor())
 
     # spacy named entity recognition
     if update.get("use_name_entities"):
