@@ -33,7 +33,7 @@ def add_countvectors_featurizer(update):
 
 def add_embedding_intent_classifier():
     return {
-        "name": "DIETClassifier",
+        "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
         "hidden_layers_sizes": {"text": [256, 128]},
         "number_of_transformer_layers": 0,
         "weight_sparsity": 0,
@@ -45,7 +45,7 @@ def add_embedding_intent_classifier():
 
 
 def add_diet_classifier():
-    return {"name": "DIETClassifier", "entity_recognition": True, "BILOU_flag": False}
+    return {"name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom", "entity_recognition": True, "BILOU_flag": False}
 
 
 def legacy_internal_config(update):
