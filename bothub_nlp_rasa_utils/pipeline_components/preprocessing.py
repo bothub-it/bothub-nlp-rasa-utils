@@ -7,6 +7,7 @@ from rasa.nlu.training_data import Message, TrainingData
 
 from ..nlp.preprocessing_factory import PreprocessingFactory
 
+
 class Preprocessing(Component):
 
     # Which components are required by this component.

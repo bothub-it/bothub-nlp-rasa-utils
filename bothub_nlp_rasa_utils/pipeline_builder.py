@@ -89,7 +89,7 @@ def transformer_network_diet_word_embedding_config(update):
 def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
-            "name": "bothub_nlp_rasa_utils.pipeline_components.HFTransformerNLP.HFTransformersNLP",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
             "model_name": "bert_portuguese",
         },
         {  # Tokenizer
@@ -106,34 +106,94 @@ def transformer_network_diet_bert_config(update):
     return pipeline
 
 
-def get_rasa_nlu_config_from_update(update):  # pragma: no cover
-    spacy_algorithms = [
-        "neural_network_external",
-        "transformer_network_diet_word_embedding",
+def get_algorithm_info():
+    # todo: get data from config file
+    return [
+        # Sorted by priority
+        {
+            "name": "transformer_network_diet_bert",
+            "supported_languages": ["en"],
+            "config": transformer_network_diet_bert_config
+        },
+        {
+            "name": "transformer_network_diet_word_embedding",
+            "supported_languages": [],
+            "config": transformer_network_diet_word_embedding_config
+        },
+        {
+            "name": "transformer_network_diet",
+            "supported_languages": ["pt_br"],
+            "config": transformer_network_diet_config
+        }
     ]
-    pipeline = []
-    if "transformer" in update.get("algorithm"):
-        pipeline.append(add_preprocessing(update))
-    if update.get("use_name_entities") or update.get("algorithm") in spacy_algorithms:
-        pipeline.append(add_spacy_nlp())
 
-    if update.get("algorithm") == "neural_network_internal":
-        pipeline.extend(legacy_internal_config(update))
-    elif update.get("algorithm") == "neural_network_external":
-        pipeline.extend(legacy_external_config(update))
-    elif update.get("algorithm") == "transformer_network_diet":
-        pipeline.extend(transformer_network_diet_config(update))
-    elif update.get("algorithm") == "transformer_network_diet_word_embedding":
-        pipeline.extend(transformer_network_diet_word_embedding_config(update))
-    elif update.get("algorithm") == "transformer_network_diet_bert":
-        pipeline.extend(transformer_network_diet_bert_config(update))
-    else:
+
+def choose_best_algorithm(update):
+
+    supported_algorithms = get_algorithm_info()
+
+    for model in supported_algorithms:
+        if update.get("language") in model["supported_languages"]:
+            return model
+
+    raise Exception('None algorithm support this language')
+
+
+def get_rasa_nlu_config(update):
+
+    pipeline = []
+
+    try:
+        chosen_model = choose_best_algorithm(update)
+    except Exception as e:
         return
 
-    # spacy named entity recognition
+    pipeline.append(add_preprocessing(update))
+
+    if update.get("use_name_entities") or chosen_model["name"] == "transformer_network_diet_word_embedding":
+        pipeline.append(add_spacy_nlp())
+
+    pipeline.extend(chosen_model["config"](update))
+
     if update.get("use_name_entities"):
         pipeline.append({"name": "SpacyEntityExtractor"})
+
+    print(f"New pipeline: {pipeline}")
 
     return RasaNLUModelConfig(
         {"language": update.get("language"), "pipeline": pipeline}
     )
+
+
+# def get_rasa_nlu_config_from_update(update):  # pragma: no cover
+#     spacy_algorithms = [
+#         "neural_network_external",
+#         "transformer_network_diet_word_embedding",
+#     ]
+#
+#     pipeline = []
+#     if "transformer" in update.get("algorithm"):
+#         pipeline.append(add_preprocessing(update))
+#     if update.get("use_name_entities") or update.get("algorithm") in spacy_algorithms:
+#         pipeline.append(add_spacy_nlp())
+#
+#     if update.get("algorithm") == "neural_network_internal":
+#         pipeline.extend(legacy_internal_config(update))
+#     elif update.get("algorithm") == "neural_network_external":
+#         pipeline.extend(legacy_external_config(update))
+#     elif update.get("algorithm") == "transformer_network_diet":
+#         pipeline.extend(transformer_network_diet_config(update))
+#     elif update.get("algorithm") == "transformer_network_diet_word_embedding":
+#         pipeline.extend(transformer_network_diet_word_embedding_config(update))
+#     elif update.get("algorithm") == "transformer_network_diet_bert":
+#         pipeline.extend(transformer_network_diet_bert_config(update))
+#     else:
+#         return
+#
+#     # spacy named entity recognition
+#     if update.get("use_name_entities"):
+#         pipeline.append({"name": "SpacyEntityExtractor"})
+#
+#     return RasaNLUModelConfig(
+#         {"language": update.get("language"), "pipeline": pipeline}
+#     )
