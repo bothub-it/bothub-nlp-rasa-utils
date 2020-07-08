@@ -39,6 +39,33 @@ class Preprocessing(Component):
     def provide_context(self) -> Dict[Text, Any]:
         return {"language": self.language}
 
+    @staticmethod
+    def do_entities_overlap(entities: List[Dict]) -> bool:
+        sorted_entities = sorted(entities, key=lambda e: e["start"])
+        for i in range(len(sorted_entities) - 1):
+            curr_ent = sorted_entities[i]
+            next_ent = sorted_entities[i + 1]
+            if (
+                    next_ent["start"] < curr_ent["end"]
+                    and next_ent["entity"] != curr_ent["entity"]
+            ):
+
+                return True
+
+        return False
+
+    @staticmethod
+    def remove_overlapping_entities(entities):
+        new_entities = []
+        for i in range(len(entities)):
+            overlap = False
+            for j in range(len(entities)):
+                if i != j and (entities[i]['start'] >= entities[j]['start'] and entities[i]['end'] <= entities[j]['end']) or (entities[i]['end'] > entities[j]['start'] and entities[i]['start'] < entities[j]['end']):
+                    overlap = True
+            if not overlap:
+                new_entities.append(entities[i])
+        return new_entities
+
     def train(
         self,
         training_data: TrainingData,
@@ -53,7 +80,12 @@ class Preprocessing(Component):
         PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(self.language)
 
         for idx in range(size):
-            example_text = training_data.training_examples[idx - subtract_idx].text
+            example = training_data.training_examples[idx - subtract_idx]
+
+            if 'entities' in example.data and self.do_entities_overlap(example.data['entities']):
+                example.data['entities'] = self.remove_overlapping_entities(example.data['entities'])
+                
+            example_text = example.text
 
             PREPROCESS_FACTORY.preprocess(example_text)
 
