@@ -106,6 +106,9 @@ def transformer_network_diet_bert_config(update):
     return pipeline
 
 
+
+algorithm_list = ["transformer_network_diet_bert", "transformer_network_diet_word_embedding", "transformer_network_diet"]
+
 def get_rasa_nlu_config_from_update(update):  # pragma: no cover
     spacy_algorithms = [
         "neural_network_external",
@@ -117,10 +120,6 @@ def get_rasa_nlu_config_from_update(update):  # pragma: no cover
     if update.get("use_name_entities") or update.get("algorithm") in spacy_algorithms:
         pipeline.append(add_spacy_nlp())
 
-    if update.get("algorithm") == "neural_network_internal":
-        pipeline.extend(legacy_internal_config(update))
-    elif update.get("algorithm") == "neural_network_external":
-        pipeline.extend(legacy_external_config(update))
     elif update.get("algorithm") == "transformer_network_diet":
         pipeline.extend(transformer_network_diet_config(update))
     elif update.get("algorithm") == "transformer_network_diet_word_embedding":
