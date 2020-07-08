@@ -103,3 +103,69 @@ class HFTransformersNLPCustom(HFTransformersNLP):
         # while feeding input.
         self.pad_token_id = self.tokenizer.unk_token_id
         logger.debug(f"Loaded Tokenizer and Model for {self.model_name}")
+
+    def _add_lm_specific_special_tokens(
+            self, token_ids: List[List[int]]
+    ) -> List[List[int]]:
+        """Add language model specific special tokens which were used during their training.
+        Args:
+            token_ids: List of token ids for each example in the batch.
+        Returns:
+            Augmented list of token ids for each example in the batch.
+        """
+        from .registry import (
+            model_special_tokens_pre_processors,
+        )
+
+        augmented_tokens = [
+            model_special_tokens_pre_processors[self.model_name](example_token_ids)
+            for example_token_ids in token_ids
+        ]
+        return augmented_tokens
+
+    def _lm_specific_token_cleanup(
+            self, split_token_ids: List[int], token_strings: List[Text]
+    ) -> Tuple[List[int], List[Text]]:
+        """Clean up special chars added by tokenizers of language models.
+        Many language models add a special char in front/back of (some) words. We clean up those chars as they are not
+        needed once the features are already computed.
+        Args:
+            split_token_ids: List of token ids received as output from the language model specific tokenizer.
+            token_strings: List of token strings received as output from the language model specific tokenizer.
+        Returns:
+            Cleaned up token ids and token strings.
+        """
+        from .registry import model_tokens_cleaners
+
+        return model_tokens_cleaners[self.model_name](split_token_ids, token_strings)
+
+    def _post_process_sequence_embeddings(
+            self, sequence_embeddings: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Compute sentence level representations and sequence level representations for relevant tokens.
+        Args:
+            sequence_embeddings: Sequence level dense features received as output from language model.
+        Returns:
+            Sentence and sequence level representations.
+        """
+
+        from .registry import (
+            model_embeddings_post_processors,
+        )
+
+        sentence_embeddings = []
+        post_processed_sequence_embeddings = []
+
+        for example_embedding in sequence_embeddings:
+            (
+                example_sentence_embedding,
+                example_post_processed_embedding,
+            ) = model_embeddings_post_processors[self.model_name](example_embedding)
+
+            sentence_embeddings.append(example_sentence_embedding)
+            post_processed_sequence_embeddings.append(example_post_processed_embedding)
+
+        return (
+            np.array(sentence_embeddings),
+            np.array(post_processed_sequence_embeddings),
+        )
