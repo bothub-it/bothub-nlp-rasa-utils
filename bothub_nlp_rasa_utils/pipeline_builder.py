@@ -107,10 +107,11 @@ def transformer_network_diet_bert_config(update):
 
 
 def get_algorithm_info():
-    # todo: get data from config file
+    # todo: get data from config file / populate languages
+
+    # Sorted by priority
     # last element -> default algorithm
     return [
-        # Sorted by priority
         {
             "name": "transformer_network_diet_bert",
             "supported_languages": [],
