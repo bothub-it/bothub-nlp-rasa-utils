@@ -31,40 +31,40 @@ def add_countvectors_featurizer(update):
         return {"name": "CountVectorsFeaturizer", "token_pattern": "(?u)\\b\\w+\\b"}
 
 
-def add_embedding_intent_classifier():
-    return {
-        "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
-        "hidden_layers_sizes": {"text": [256, 128]},
-        "number_of_transformer_layers": 0,
-        "weight_sparsity": 0,
-        "intent_classification": True,
-        "entity_recognition": True,
-        "use_masked_language_model": False,
-        "BILOU_flag": False,
-    }
-
+# def add_embedding_intent_classifier():
+#     return {
+#         "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
+#         "hidden_layers_sizes": {"text": [256, 128]},
+#         "number_of_transformer_layers": 0,
+#         "weight_sparsity": 0,
+#         "intent_classification": True,
+#         "entity_recognition": True,
+#         "use_masked_language_model": False,
+#         "BILOU_flag": False,
+#     }
+#
 
 def add_diet_classifier():
     return {"name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom", "entity_recognition": True, "BILOU_flag": False}
 
 
-def legacy_internal_config(update):
-    pipeline = [
-        add_whitespace_tokenizer(),  # Tokenizer
-        add_countvectors_featurizer(update),  # Featurizer
-        add_embedding_intent_classifier(),  # Intent Classifier
-    ]
-    return pipeline
-
-
-def legacy_external_config(update):
-    pipeline = [
-        {"name": "SpacyTokenizer"},  # Tokenizer
-        {"name": "SpacyFeaturizer"},  # Spacy Featurizer
-        add_countvectors_featurizer(update),  # Bag of Words Featurizer
-        add_embedding_intent_classifier(),  # intent classifier
-    ]
-    return pipeline
+# def legacy_internal_config(update):
+#     pipeline = [
+#         add_whitespace_tokenizer(),  # Tokenizer
+#         add_countvectors_featurizer(update),  # Featurizer
+#         add_embedding_intent_classifier(),  # Intent Classifier
+#     ]
+#     return pipeline
+#
+#
+# def legacy_external_config(update):
+#     pipeline = [
+#         {"name": "SpacyTokenizer"},  # Tokenizer
+#         {"name": "SpacyFeaturizer"},  # Spacy Featurizer
+#         add_countvectors_featurizer(update),  # Bag of Words Featurizer
+#         add_embedding_intent_classifier(),  # intent classifier
+#     ]
+#     return pipeline
 
 
 def transformer_network_diet_config(update):
@@ -89,7 +89,7 @@ def transformer_network_diet_word_embedding_config(update):
 def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
-            "name": "bothub_nlp_rasa_utils.pipeline_components.HFTransformerNLP.HFTransformersNLP",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
             "model_name": "bert_portuguese",
         },
         {  # Tokenizer
@@ -108,11 +108,12 @@ def transformer_network_diet_bert_config(update):
 
 def get_algorithm_info():
     # todo: get data from config file
+    # last element -> default algorithm
     return [
         # Sorted by priority
         {
             "name": "transformer_network_diet_bert",
-            "supported_languages": ["en"],
+            "supported_languages": [],
             "config": transformer_network_diet_bert_config
         },
         {
@@ -122,7 +123,7 @@ def get_algorithm_info():
         },
         {
             "name": "transformer_network_diet",
-            "supported_languages": ["pt_br"],
+            "supported_languages": ["all"],
             "config": transformer_network_diet_config
         }
     ]
@@ -132,21 +133,18 @@ def choose_best_algorithm(update):
 
     supported_algorithms = get_algorithm_info()
 
-    for model in supported_algorithms:
+    for model in supported_algorithms[:-1]:
         if update.get("language") in model["supported_languages"]:
             return model
 
-    raise Exception('None algorithm support this language')
+    return supported_algorithms[len(supported_algorithms)-1]
 
 
 def get_rasa_nlu_config(update):
 
     pipeline = []
 
-    try:
-        chosen_model = choose_best_algorithm(update)
-    except Exception as e:
-        return
+    chosen_model = choose_best_algorithm(update)
 
     pipeline.append(add_preprocessing(update))
 
