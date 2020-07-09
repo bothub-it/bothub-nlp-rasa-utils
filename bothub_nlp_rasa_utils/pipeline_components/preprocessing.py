@@ -40,7 +40,7 @@ class Preprocessing(Component):
         return {"language": self.language}
 
     @staticmethod
-    def do_entities_overlap(entities: List[Dict]) -> bool:
+    def do_entities_overlap(entities: List[Dict]):
         sorted_entities = sorted(entities, key=lambda e: e["start"])
         for i in range(len(sorted_entities) - 1):
             curr_ent = sorted_entities[i]
@@ -49,9 +49,7 @@ class Preprocessing(Component):
                     next_ent["start"] < curr_ent["end"]
                     and next_ent["entity"] != curr_ent["entity"]
             ):
-
                 return True
-
         return False
 
     @staticmethod
@@ -60,7 +58,9 @@ class Preprocessing(Component):
         for i in range(len(entities)):
             overlap = False
             for j in range(len(entities)):
-                if i != j and (entities[i]['start'] >= entities[j]['start'] and entities[i]['end'] <= entities[j]['end']) or (entities[i]['end'] > entities[j]['start'] and entities[i]['start'] < entities[j]['end']):
+                if i != j and (entities[i]['start'] >= entities[j]['start'] and entities[i]['end'] <= entities[j]['end']):
+                    overlap = True
+                elif i != j and ((entities[i]['end'] > entities[j]['start'] and entities[i]['start'] < entities[j]['end']) and not (entities[j]['start'] >= entities[i]['start'] and entities[j]['end'] <= entities[i]['end'])):
                     overlap = True
             if not overlap:
                 new_entities.append(entities[i])
