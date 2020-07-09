@@ -105,6 +105,7 @@ def choose_best_algorithm(update):
         if update.get("language") in model["supported_languages"]:
             return model
 
+    # default algorithm
     return supported_algorithms[len(supported_algorithms)-1]
 
 
@@ -127,5 +128,8 @@ def get_rasa_nlu_config(update):
     print(f"New pipeline: {pipeline}")
 
     return RasaNLUModelConfig(
-        {"language": update.get("language"), "pipeline": pipeline}
+        {
+            "language": update.get("language"),
+            "pipeline": pipeline
+        }
     )
