@@ -89,7 +89,7 @@ def transformer_network_diet_word_embedding_config(update):
 def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
-            "name": "bothub_nlp_rasa_utils.pipeline_components.HFTransformerNLP.HFTransformersNLP",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformers.HFTransformersNLPCustom",
             "model_name": "bert_portuguese",
         },
         {  # Tokenizer

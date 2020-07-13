@@ -40,7 +40,7 @@ from_pt_dict = {
 }
 
 model_class_dict = {
-    "bert": TFBertModel,
+    "bert_english": TFBertModel,
     "gpt": TFOpenAIGPTModel,
     "gpt2": TFGPT2Model,
     "xlnet": TFXLNetModel,
@@ -50,7 +50,7 @@ model_class_dict = {
     'bert_portuguese': TFBertModel
 }
 model_tokenizer_dict = {
-    "bert": BertTokenizer,
+    "bert_english": BertTokenizer,
     "gpt": OpenAIGPTTokenizer,
     "gpt2": GPT2Tokenizer,
     "xlnet": XLNetTokenizer,
@@ -60,7 +60,7 @@ model_tokenizer_dict = {
     'bert_portuguese': BertTokenizer
 }
 model_weights_defaults = {
-    "bert": "bert-base-uncased",
+    "bert_english": "bert-base-uncased",
     "gpt": "openai-gpt",
     "gpt2": "gpt2",
     "xlnet": "xlnet-base-cased",
@@ -71,7 +71,7 @@ model_weights_defaults = {
 }
 
 model_special_tokens_pre_processors = {
-    "bert": bert_tokens_pre_processor,
+    "bert_english": bert_tokens_pre_processor,
     "gpt": gpt_tokens_pre_processor,
     "gpt2": gpt_tokens_pre_processor,
     "xlnet": xlnet_tokens_pre_processor,
@@ -82,7 +82,7 @@ model_special_tokens_pre_processors = {
 }
 
 model_tokens_cleaners = {
-    "bert": bert_tokens_cleaner,
+    "bert_english": bert_tokens_cleaner,
     "gpt": openaigpt_tokens_cleaner,
     "gpt2": gpt2_tokens_cleaner,
     "xlnet": xlnet_tokens_cleaner,
@@ -93,7 +93,7 @@ model_tokens_cleaners = {
 }
 
 model_embeddings_post_processors = {
-    "bert": bert_embeddings_post_processor,
+    "bert_english": bert_embeddings_post_processor,
     "gpt": gpt_embeddings_post_processor,
     "gpt2": gpt_embeddings_post_processor,
     "xlnet": xlnet_embeddings_post_processor,
