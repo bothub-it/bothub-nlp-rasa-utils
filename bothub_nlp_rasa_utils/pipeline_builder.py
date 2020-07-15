@@ -1,5 +1,5 @@
 from rasa.nlu.config import RasaNLUModelConfig
-
+from bothub_nlp_celery.utils import choose_best_algorithm
 
 def add_spacy_nlp():
     return {"name": "bothub_nlp_rasa_utils.pipeline_components.spacy_nlp.SpacyNLP"}
@@ -73,54 +73,23 @@ def transformer_network_diet_bert_config(update):
     return pipeline
 
 
-def get_algorithm_info():
-    # todo: get data from config file / populate languages
-
-    # Sorted by priority
-    # last element -> default algorithm
-    return [
-        {
-            "name": "transformer_network_diet_bert",
-            "supported_languages": [],
-            "config": transformer_network_diet_bert_config
-        },
-        {
-            "name": "transformer_network_diet_word_embedding",
-            "supported_languages": [],
-            "config": transformer_network_diet_word_embedding_config
-        },
-        {
-            "name": "transformer_network_diet",
-            "supported_languages": ["all"],
-            "config": transformer_network_diet_config
-        }
-    ]
-
-
-def choose_best_algorithm(update):
-
-    supported_algorithms = get_algorithm_info()
-
-    for model in supported_algorithms[:-1]:
-        if update.get("language") in model["supported_languages"]:
-            return model
-
-    # default algorithm
-    return supported_algorithms[len(supported_algorithms)-1]
-
-
 def get_rasa_nlu_config(update):
 
     pipeline = []
 
-    chosen_model = choose_best_algorithm(update)
+    chosen_model = choose_best_algorithm(update.get("language"))
 
     pipeline.append(add_preprocessing(update))
 
-    if update.get("use_name_entities") or chosen_model["name"] == "transformer_network_diet_word_embedding":
+    if update.get("use_name_entities") or chosen_model == "transformer_network_diet_word_embedding":
         pipeline.append(add_spacy_nlp())
 
-    pipeline.extend(chosen_model["config"](update))
+    if chosen_model == "transformer_network_diet_bert":
+        pipeline.extend(transformer_network_diet_bert_config(update))
+    elif chosen_model == "transformer_network_diet_word_embedding":
+        pipeline.extend(transformer_network_diet_word_embedding_config(update))
+    else:
+        pipeline.extend(transformer_network_diet_config(update))
 
     if update.get("use_name_entities"):
         pipeline.append({"name": "SpacyEntityExtractor"})
