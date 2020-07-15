@@ -13,7 +13,6 @@ from .utils import backend
 from .utils import get_examples_request
 from .persistor import BothubPersistor
 from bothub_nlp_rasa_utils import logger
-#from .pipeline_builder import get_rasa_nlu_config_from_update
 from .pipeline_builder import get_rasa_nlu_config
 
 from rasa.nlu.training_data.formats.readerwriter import TrainingDataWriter
