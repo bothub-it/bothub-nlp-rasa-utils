@@ -57,7 +57,6 @@ def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
             "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
-            "model_name": "bert_portuguese",
         },
         {  # Tokenizer
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
