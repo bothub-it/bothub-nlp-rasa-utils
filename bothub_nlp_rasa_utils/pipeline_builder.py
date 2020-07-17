@@ -81,18 +81,15 @@ def get_rasa_nlu_config(update):
 
     pipeline.append(add_preprocessing(update))
 
-    if update.get("use_name_entities") or chosen_model == "transformer_network_diet_word_embedding":
-        pipeline.append(add_spacy_nlp())
-
     if chosen_model == "transformer_network_diet_bert":
         pipeline.extend(transformer_network_diet_bert_config(update))
     elif chosen_model == "transformer_network_diet_word_embedding":
+        pipeline.append(add_spacy_nlp())
         pipeline.extend(transformer_network_diet_word_embedding_config(update))
+        if update.get("use_name_entities"):
+            pipeline.append({"name": "SpacyEntityExtractor"})
     else:
         pipeline.extend(transformer_network_diet_config(update))
-
-    if update.get("use_name_entities"):
-        pipeline.append({"name": "SpacyEntityExtractor"})
 
     print(f"New pipeline: {pipeline}")
 
