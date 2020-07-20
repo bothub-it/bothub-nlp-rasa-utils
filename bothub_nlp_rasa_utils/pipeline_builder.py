@@ -1,5 +1,6 @@
 from rasa.nlu.config import RasaNLUModelConfig
 from bothub_nlp_celery.utils import choose_best_algorithm
+from .pipeline_components.registry import language_to_model
 
 def add_spacy_nlp():
     return {"name": "bothub_nlp_rasa_utils.pipeline_components.spacy_nlp.SpacyNLP"}
@@ -57,6 +58,7 @@ def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
             "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
+            "model_name": language_to_model.get(update.get("language")),
         },
         {  # Tokenizer
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
@@ -93,7 +95,7 @@ def get_rasa_nlu_config(update):
     if update.get("use_name_entities"):
         pipeline.append({"name": "SpacyEntityExtractor"})
 
-    print(f"New pipeline: {pipeline}")
+    print(f"Novo pipeline: {pipeline}")
 
     return RasaNLUModelConfig(
         {

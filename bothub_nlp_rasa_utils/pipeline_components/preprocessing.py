@@ -28,7 +28,7 @@ class Preprocessing(Component):
         self, component_config: Optional[Dict[Text, Any]] = None
     ) -> None:
         super().__init__(component_config)
-        self.language = "es"
+        self.language = component_config["language"]
 
 
     @classmethod

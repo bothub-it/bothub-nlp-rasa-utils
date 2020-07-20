@@ -1,6 +1,5 @@
 import logging
 from typing import Any, Dict, List, Text, Tuple, Optional
-
 from rasa.nlu.tokenizers.whitespace_tokenizer import WhitespaceTokenizer
 from rasa.nlu.components import Component
 from rasa.nlu.config import RasaNLUModelConfig
@@ -35,16 +34,6 @@ class HFTransformersNLPCustom(HFTransformersNLP):
     The component also tokenizes and featurizes dense featurizable attributes of each
     message.
     """
-
-    defaults = {
-        # name of the language model to load.
-        "model_name": "bert",
-        # Pre-Trained weights to be loaded(string)
-        "model_weights": None,
-        # an optional path to a specific directory to download
-        # and cache the pre-trained model weights.
-        "cache_dir": None,
-    }
 
     def __init__(self, component_config: Optional[Dict[Text, Any]] = None) -> None:
         super(HFTransformersNLP, self).__init__(component_config)
@@ -83,13 +72,11 @@ class HFTransformersNLPCustom(HFTransformersNLP):
             
 
         logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
-
         self.tokenizer = model_tokenizer_dict[self.model_name].from_pretrained(
             model_weights_defaults[self.model_name], cache_dir=None
         )
-
         self.model = model_class_dict[self.model_name].from_pretrained(
-            model_weights_defaults[self.model_name], cache_dir=None,
+            'model', cache_dir=None,
             from_pt=from_pt_dict.get(self.model_name, False)
         )
         from pprint import pprint
