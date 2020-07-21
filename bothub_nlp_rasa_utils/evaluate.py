@@ -130,6 +130,7 @@ def evaluate_entities(entity_results, extractors):  # pragma: no cover
     result = {}
 
     for extractor in extractors:
+        print(extractor)
         merged_predictions = merge_labels(aligned_predictions, extractor)
         merged_predictions = substitute_labels(merged_predictions, "O", "no_entity")
 
@@ -376,11 +377,14 @@ def merge_intent_entity_log(intent_evaluation, entity_evaluation):
     intent_logs = intent_evaluation.get("log")
     entity_logs = entity_evaluation.get("log")
     merged_logs = []
+
     for intent_log in intent_logs:
-        for entity_log in entity_logs:
-            if intent_log.get("text") == entity_log.get("text"):
-                intent_log.update(entity_log)
+        if entity_logs is not None:
+            for entity_log in entity_logs:
+                if intent_log.get("text") == entity_log.get("text"):
+                    intent_log.update(entity_log)
         merged_logs.append(intent_log)
+    
     return merged_logs
 
 
@@ -462,23 +466,24 @@ def evaluate_update(repository_version, repository_authorization):
                 },
                 repository_authorization,
             )
-
-    for entity_key in entity_reports.keys():
-        if entity_key and entity_key not in excluded_itens:  # pragma: no cover
-            entity = entity_reports.get(entity_key)
-
-            backend().request_backend_create_evaluate_results_score(
-                {
-                    "evaluate_id": evaluate_result.get("evaluate_id"),
-                    "repository_version": repository_version,
-                    "precision": entity.get("precision"),
-                    "recall": entity.get("recall"),
-                    "f1_score": entity.get("f1-score"),
-                    "support": entity.get("support"),
-                    "entity_key": entity_key,
-                },
-                repository_authorization,
-            )
+    
+    if entity_reports is not None:
+        for entity_key in entity_reports.keys():
+            if entity_key and entity_key not in excluded_itens:  # pragma: no cover
+                entity = entity_reports.get(entity_key)
+    
+                backend().request_backend_create_evaluate_results_score(
+                    {
+                        "evaluate_id": evaluate_result.get("evaluate_id"),
+                        "repository_version": repository_version,
+                        "precision": entity.get("precision"),
+                        "recall": entity.get("recall"),
+                        "f1_score": entity.get("f1-score"),
+                        "support": entity.get("support"),
+                        "entity_key": entity_key,
+                    },
+                    repository_authorization,
+                )
 
     return {
         "id": evaluate_result.get("evaluate_id"),
