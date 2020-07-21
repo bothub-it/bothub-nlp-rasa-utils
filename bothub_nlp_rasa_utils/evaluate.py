@@ -130,7 +130,6 @@ def evaluate_entities(entity_results, extractors):  # pragma: no cover
     result = {}
 
     for extractor in extractors:
-        print(extractor)
         merged_predictions = merge_labels(aligned_predictions, extractor)
         merged_predictions = substitute_labels(merged_predictions, "O", "no_entity")
 
