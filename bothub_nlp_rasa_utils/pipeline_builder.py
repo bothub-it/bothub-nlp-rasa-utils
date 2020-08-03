@@ -78,7 +78,8 @@ def get_rasa_nlu_config(update):
 
     pipeline = []
 
-    chosen_model = choose_best_algorithm(update.get("language"))
+    # chosen_model = choose_best_algorithm(update.get("language"))
+    chosen_model = update.get('algorithm')
 
     pipeline.append(add_preprocessing(update))
 
