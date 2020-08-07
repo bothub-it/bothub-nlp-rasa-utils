@@ -1,6 +1,8 @@
 from rasa.nlu.config import RasaNLUModelConfig
-from bothub_nlp_celery.utils import choose_best_algorithm
+from bothub_nlp_celery.utils import choose_best_algorithm, ALGORITHM_TO_LANGUAGE_MODEL
+from bothub_nlp_celery import settings
 from .pipeline_components.registry import language_to_model
+
 
 def add_spacy_nlp():
     return {"name": "bothub_nlp_rasa_utils.pipeline_components.spacy_nlp.SpacyNLP"}
@@ -31,8 +33,40 @@ def add_countvectors_featurizer(update):
         return {"name": "CountVectorsFeaturizer", "token_pattern": "(?u)\\b\\w+\\b"}
 
 
+def add_embedding_intent_classifier():
+    return {
+        "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
+        "hidden_layers_sizes": {"text": [256, 128]},
+        "number_of_transformer_layers": 0,
+        "weight_sparsity": 0,
+        "intent_classification": True,
+        "entity_recognition": True,
+        "use_masked_language_model": False,
+        "BILOU_flag": False,
+    }
+
+
 def add_diet_classifier():
     return {"name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom", "entity_recognition": True, "BILOU_flag": False}
+
+
+def legacy_internal_config(update):
+    pipeline = [
+        add_whitespace_tokenizer(),  # Tokenizer
+        add_countvectors_featurizer(update),  # Featurizer
+        add_embedding_intent_classifier(),  # Intent Classifier
+    ]
+    return pipeline
+
+
+def legacy_external_config(update):
+    pipeline = [
+        {"name": "SpacyTokenizer"},  # Tokenizer
+        {"name": "SpacyFeaturizer"},  # Spacy Featurizer
+        add_countvectors_featurizer(update),  # Bag of Words Featurizer
+        add_embedding_intent_classifier(),  # intent classifier
+    ]
+    return pipeline
 
 
 def transformer_network_diet_config(update):
@@ -78,14 +112,29 @@ def get_rasa_nlu_config(update):
 
     pipeline = []
 
-    # chosen_model = choose_best_algorithm(update.get("language"))
-    chosen_model = update.get('algorithm')
+    # algorithm = choose_best_algorithm(update.get("language"))
+    algorithm = update.get('algorithm')
+    language = update.get('language')
+    
+    model = ALGORITHM_TO_LANGUAGE_MODEL[algorithm]
+    if (model == 'SPACY' and language not in settings.SPACY_LANGUAGES) or (
+            model == 'BERT' and language not in settings.BERT_LANGUAGES):
+        algorithm = "transformer_network_diet"
 
+    print('languague:', language)
+    print('algorithm:', algorithm)
+    
     pipeline.append(add_preprocessing(update))
-
-    if chosen_model == "transformer_network_diet_bert":
+    if algorithm == "neural_network_internal":
+        pipeline.extend(legacy_internal_config(update))
+    elif algorithm == "neural_network_external":
+        pipeline.append(add_spacy_nlp())
+        pipeline.extend(legacy_external_config(update))
+        if update.get("use_name_entities"):
+            pipeline.append({"name": "SpacyEntityExtractor"})
+    elif algorithm == "transformer_network_diet_bert":
         pipeline.extend(transformer_network_diet_bert_config(update))
-    elif chosen_model == "transformer_network_diet_word_embedding":
+    elif algorithm == "transformer_network_diet_word_embedding":
         pipeline.append(add_spacy_nlp())
         pipeline.extend(transformer_network_diet_word_embedding_config(update))
         if update.get("use_name_entities"):
