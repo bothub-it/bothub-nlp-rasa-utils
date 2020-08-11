@@ -77,7 +77,6 @@ class Preprocessing(Component):
         not_repeated_phrases = set()
         size = len(training_data.training_examples)
         subtract_idx = 0
-
         PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(self.language)
 
         for idx in range(size):
@@ -87,8 +86,7 @@ class Preprocessing(Component):
                 example.data['entities'] = self.remove_overlapping_entities(example.data['entities'])
                 
             example_text = example.text
-
-            PREPROCESS_FACTORY.preprocess(example_text)
+            example_text = PREPROCESS_FACTORY.preprocess(example_text)
 
             if example_text in not_repeated_phrases:
                 # remove example at this index from training_examples
