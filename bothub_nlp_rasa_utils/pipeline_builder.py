@@ -30,7 +30,10 @@ def add_countvectors_featurizer(update):
         }
 
     else:
-        return {"name": "CountVectorsFeaturizer", "token_pattern": "(?u)\\b\\w+\\b"}
+        return {
+            "name": "CountVectorsFeaturizer",
+            "token_pattern": "(?u)\\b\\w+\\b"
+        }
 
 
 def add_embedding_intent_classifier():
@@ -46,8 +49,18 @@ def add_embedding_intent_classifier():
     }
 
 
-def add_diet_classifier():
-    return {"name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom", "entity_recognition": True, "BILOU_flag": False}
+def add_diet_classifier(epochs=300, bert=False):
+    model = {
+        "name": "bothub_nlp_rasa_utils.pipeline_components.diet_classifier.DIETClassifierCustom",
+        "entity_recognition": True,
+        "BILOU_flag": False,
+        "epochs": epochs
+    }
+
+    if bert:
+        model["hidden_layer_sizes"] = {"text": [256, 64]}
+
+    return model
 
 
 def legacy_internal_config(update):
@@ -103,7 +116,10 @@ def transformer_network_diet_bert_config(update):
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
         },
         add_countvectors_featurizer(update),  # Bag of Words Featurizer
-        add_diet_classifier(),  # Intent Classifier
+        {
+            "name": "CountVectorsFeaturizer"
+        },
+        add_diet_classifier(epochs=100, bert=True),  # Intent Classifier
     ]
     return pipeline
 

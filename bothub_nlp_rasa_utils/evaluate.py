@@ -446,8 +446,8 @@ def evaluate_update(repository_version, repository_authorization):
         repository_authorization,
     )
 
-    intent_reports = intent_evaluation.get("report")
-    entity_reports = entity_evaluation.get("report")
+    intent_reports = intent_evaluation.get("report", {})
+    entity_reports = entity_evaluation.get("report", {})
 
     for intent_key in intent_reports.keys():
         if intent_key and intent_key not in excluded_itens:
@@ -464,24 +464,23 @@ def evaluate_update(repository_version, repository_authorization):
                 },
                 repository_authorization,
             )
-    
-    if entity_reports is not None:
-        for entity_key in entity_reports.keys():
-            if entity_key and entity_key not in excluded_itens:  # pragma: no cover
-                entity = entity_reports.get(entity_key)
-    
-                backend().request_backend_create_evaluate_results_score(
-                    {
-                        "evaluate_id": evaluate_result.get("evaluate_id"),
-                        "repository_version": repository_version,
-                        "precision": entity.get("precision"),
-                        "recall": entity.get("recall"),
-                        "f1_score": entity.get("f1-score"),
-                        "support": entity.get("support"),
-                        "entity_key": entity_key,
-                    },
-                    repository_authorization,
-                )
+
+    for entity_key in entity_reports.keys():
+        if entity_key and entity_key not in excluded_itens:  # pragma: no cover
+            entity = entity_reports.get(entity_key)
+
+            backend().request_backend_create_evaluate_results_score(
+                {
+                    "evaluate_id": evaluate_result.get("evaluate_id"),
+                    "repository_version": repository_version,
+                    "precision": entity.get("precision"),
+                    "recall": entity.get("recall"),
+                    "f1_score": entity.get("f1-score"),
+                    "support": entity.get("support"),
+                    "entity_key": entity_key,
+                },
+                repository_authorization,
+            )
 
     return {
         "id": evaluate_result.get("evaluate_id"),
