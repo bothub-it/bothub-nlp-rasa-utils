@@ -25,15 +25,23 @@ def add_countvectors_featurizer(update):
             "name": "CountVectorsFeaturizer",
             "analyzer": "char",
             "min_ngram": 3,
-            "max_ngram": 3,
-            "token_pattern": "(?u)\\b\\w+\\b",
+            "max_ngram": 3
         }
 
     else:
         return {
             "name": "CountVectorsFeaturizer",
-            "token_pattern": "(?u)\\b\\w+\\b"
+            "token_pattern": r'(?u)\b\w+\b'
         }
+
+
+def add_char_analyzer_featurizer():
+    return {
+        "name": "CountVectorsFeaturizer",
+        "analyzer": "char",
+        "min_ngram": 3,
+        "max_ngram": 3
+    }
 
 
 def add_embedding_intent_classifier():
@@ -114,13 +122,21 @@ def transformer_network_diet_bert_config(update):
         },
         {  # Bert Featurizer
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
-        },
-        add_countvectors_featurizer(update),  # Bag of Words Featurizer
-        {
-            "name": "CountVectorsFeaturizer"
-        },
-        add_diet_classifier(epochs=100, bert=True),  # Intent Classifier
+        }
     ]
+
+    # Bag of Words Featurizers
+    if update.get("use_analyze_char"):
+        pipeline.append(add_char_analyzer_featurizer())
+
+    pipeline.append({
+        "name": "CountVectorsFeaturizer",
+        "token_pattern": r'(?u)\b\w+\b'
+    })
+
+    # Intent Classifier
+    pipeline.append(add_diet_classifier(epochs=100, bert=True))
+
     return pipeline
 
 
@@ -131,7 +147,7 @@ def get_rasa_nlu_config(update):
     # algorithm = choose_best_algorithm(update.get("language"))
     algorithm = update.get('algorithm')
     language = update.get('language')
-    
+
     model = ALGORITHM_TO_LANGUAGE_MODEL[algorithm]
     if (model == 'SPACY' and language not in settings.SPACY_LANGUAGES) or (
             model == 'BERT' and language not in settings.BERT_LANGUAGES):
@@ -139,7 +155,7 @@ def get_rasa_nlu_config(update):
 
     print('languague:', language)
     print('algorithm:', algorithm)
-    
+
     pipeline.append(add_preprocessing(update))
     if algorithm == "neural_network_internal":
         pipeline.extend(legacy_internal_config(update))
