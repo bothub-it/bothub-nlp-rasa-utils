@@ -373,14 +373,16 @@ def get_formatted_log(merged_logs):
 
 
 def merge_intent_entity_log(intent_evaluation, entity_evaluation):
-    intent_logs = intent_evaluation.get("log")
-    entity_logs = entity_evaluation.get("log")
+    intent_logs = intent_evaluation.get("log", [])
+    entity_logs = entity_evaluation.get("log", [])
     merged_logs = []
+
     for intent_log in intent_logs:
         for entity_log in entity_logs:
             if intent_log.get("text") == entity_log.get("text"):
                 intent_log.update(entity_log)
         merged_logs.append(intent_log)
+    
     return merged_logs
 
 
@@ -444,8 +446,8 @@ def evaluate_update(repository_version, repository_authorization):
         repository_authorization,
     )
 
-    intent_reports = intent_evaluation.get("report")
-    entity_reports = entity_evaluation.get("report")
+    intent_reports = intent_evaluation.get("report", {})
+    entity_reports = entity_evaluation.get("report", {})
 
     for intent_key in intent_reports.keys():
         if intent_key and intent_key not in excluded_itens:

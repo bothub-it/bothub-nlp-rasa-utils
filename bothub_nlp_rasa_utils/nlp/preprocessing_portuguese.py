@@ -11,7 +11,7 @@ class PreprocessingPortuguese(PreprocessingInterface):
         if phrase == None:
             return
 
-        phrase = PreprocessingBase.preprocessing(phrase)
+        phrase = PreprocessingBase().preprocess(phrase)
 
         phrase = phrase.replace("blza", "beleza")
         phrase = phrase.replace("flw", "falou")

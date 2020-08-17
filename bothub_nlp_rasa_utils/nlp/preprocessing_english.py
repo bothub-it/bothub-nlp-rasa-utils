@@ -10,7 +10,7 @@ class PreprocessingEnglish(PreprocessingInterface):
         if phrase == None:
             return
         
-        phrase = PreprocessingBase.preprocessing(phrase)
+        phrase = PreprocessingBase().preprocess(phrase)
         
         # set regex for "mkt":
         mkt_regex = r"\b(mkt)\b"

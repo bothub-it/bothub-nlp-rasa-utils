@@ -6,11 +6,11 @@ extras_requires = {
 
 setup(
     name='bothub_nlp_rasa_utils',
-    version='1.1.12',
+    version='1.1.17',
     description='Bothub NLP Rasa Utils',
     packages=find_packages(),
     install_requires=[
-        'rasa==1.10.8',
+        'rasa==1.10.6',
         'transformers==2.11.0'
     ],
     extras_require=extras_requires,
