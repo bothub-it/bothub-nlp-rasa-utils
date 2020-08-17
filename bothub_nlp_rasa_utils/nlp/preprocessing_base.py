@@ -24,9 +24,10 @@ def de_emojify(phrase):
 
     return emoji_pattern.sub(r'', phrase)
 
-    
+
 class PreprocessingBase(PreprocessingInterface):
 
     def preprocess(self, phrase: str = None):
         # removing accent and lowercasing characters
+        phrase = de_emojify(phrase)
         return unidecode(phrase.lower())
