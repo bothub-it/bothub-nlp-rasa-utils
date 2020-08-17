@@ -23,7 +23,7 @@ def add_countvectors_featurizer(update):
     if update.get("use_analyze_char"):
         return {
             "name": "CountVectorsFeaturizer",
-            "analyzer": "char",
+            "analyzer": "char_wb",
             "min_ngram": 3,
             "max_ngram": 3
         }
@@ -38,7 +38,7 @@ def add_countvectors_featurizer(update):
 def add_char_analyzer_featurizer():
     return {
         "name": "CountVectorsFeaturizer",
-        "analyzer": "char",
+        "analyzer": "char_wb",
         "min_ngram": 3,
         "max_ngram": 3
     }
