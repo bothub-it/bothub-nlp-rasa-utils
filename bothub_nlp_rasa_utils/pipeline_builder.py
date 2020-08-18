@@ -20,28 +20,41 @@ def add_preprocessing(update):
 
 
 def add_countvectors_featurizer(update):
-    if update.get("use_analyze_char"):
-        return {
-            "name": "CountVectorsFeaturizer",
-            "analyzer": "char_wb",
-            "min_ngram": 3,
-            "max_ngram": 3
-        }
+    featurizers = []
 
-    else:
-        return {
+    if update.get("use_analyze_char"):
+        featurizers.append(
+            {
+                "name": "CountVectorsFeaturizer",
+                "analyzer": "char_wb",
+                "min_ngram": 3,
+                "max_ngram": 3
+            }
+        )
+
+    featurizers.append(
+        {
             "name": "CountVectorsFeaturizer",
             "token_pattern": r'(?u)\b\w+\b'
         }
+    )
+
+    return featurizers
 
 
-def add_char_analyzer_featurizer():
-    return {
-        "name": "CountVectorsFeaturizer",
-        "analyzer": "char_wb",
-        "min_ngram": 3,
-        "max_ngram": 3
-    }
+def add_legacy_countvectors_featurizer(update):
+    if update.get("use_analyze_char"):
+        return {
+                "name": "CountVectorsFeaturizer",
+                "analyzer": "char_wb",
+                "min_ngram": 3,
+                "max_ngram": 3
+            }
+    else:
+        return {
+                "name": "CountVectorsFeaturizer",
+                "token_pattern": r'(?u)\b\w+\b'
+            }
 
 
 def add_embedding_intent_classifier():
@@ -74,7 +87,7 @@ def add_diet_classifier(epochs=300, bert=False):
 def legacy_internal_config(update):
     pipeline = [
         add_whitespace_tokenizer(),  # Tokenizer
-        add_countvectors_featurizer(update),  # Featurizer
+        add_legacy_countvectors_featurizer(update),  # Featurizer
         add_embedding_intent_classifier(),  # Intent Classifier
     ]
     return pipeline
@@ -84,7 +97,7 @@ def legacy_external_config(update):
     pipeline = [
         {"name": "SpacyTokenizer"},  # Tokenizer
         {"name": "SpacyFeaturizer"},  # Spacy Featurizer
-        add_countvectors_featurizer(update),  # Bag of Words Featurizer
+        add_legacy_countvectors_featurizer(update),  # Bag of Words Featurizer
         add_embedding_intent_classifier(),  # intent classifier
     ]
     return pipeline
@@ -92,20 +105,36 @@ def legacy_external_config(update):
 
 def transformer_network_diet_config(update):
     pipeline = [
-        add_whitespace_tokenizer(),
-        add_countvectors_featurizer(update),  # Featurizer
-        add_diet_classifier(),  # Intent Classifier
+        add_whitespace_tokenizer()
     ]
+
+    # Featurizers
+    pipeline.extend(add_countvectors_featurizer(update))
+    # Intent Classifier
+    pipeline.append(add_diet_classifier(epochs=150))
+
     return pipeline
 
 
 def transformer_network_diet_word_embedding_config(update):
     pipeline = [
-        {"name": "SpacyTokenizer"},  # Tokenizer
-        {"name": "SpacyFeaturizer"},  # Spacy Featurizer
-        add_countvectors_featurizer(update),  # Bag of Words Featurizer
-        add_diet_classifier(),  # Intent Classifier
+        add_spacy_nlp(),
+        {   # Tokenizer
+            "name": "SpacyTokenizer"
+        },
+        {   # Spacy Featurizer
+            "name": "SpacyFeaturizer"
+        }
     ]
+
+    # Bag of Words Featurizer
+    pipeline.extend(add_countvectors_featurizer(update))
+    # Intent Classifier
+    pipeline.append(add_diet_classifier(epochs=200))
+
+    if update.get("use_name_entities"):
+        pipeline.append({"name": "SpacyEntityExtractor"})
+
     return pipeline
 
 
@@ -126,13 +155,7 @@ def transformer_network_diet_bert_config(update):
     ]
 
     # Bag of Words Featurizers
-    if update.get("use_analyze_char"):
-        pipeline.append(add_char_analyzer_featurizer())
-
-    pipeline.append({
-        "name": "CountVectorsFeaturizer",
-        "token_pattern": r'(?u)\b\w+\b'
-    })
+    pipeline.extend(add_countvectors_featurizer(update))
 
     # Intent Classifier
     pipeline.append(add_diet_classifier(epochs=100, bert=True))
@@ -157,6 +180,7 @@ def get_rasa_nlu_config(update):
     print('algorithm:', algorithm)
 
     pipeline.append(add_preprocessing(update))
+
     if algorithm == "neural_network_internal":
         pipeline.extend(legacy_internal_config(update))
     elif algorithm == "neural_network_external":
@@ -167,10 +191,7 @@ def get_rasa_nlu_config(update):
     elif algorithm == "transformer_network_diet_bert":
         pipeline.extend(transformer_network_diet_bert_config(update))
     elif algorithm == "transformer_network_diet_word_embedding":
-        pipeline.append(add_spacy_nlp())
         pipeline.extend(transformer_network_diet_word_embedding_config(update))
-        if update.get("use_name_entities"):
-            pipeline.append({"name": "SpacyEntityExtractor"})
     else:
         pipeline.extend(transformer_network_diet_config(update))
 
