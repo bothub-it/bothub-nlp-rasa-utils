@@ -107,33 +107,19 @@ def transformer_network_diet_config(update):
     pipeline = [
         add_whitespace_tokenizer()
     ]
-
-    # Featurizers
-    pipeline.extend(add_countvectors_featurizer(update))
-    # Intent Classifier
-    pipeline.append(add_diet_classifier(epochs=150))
+    pipeline.extend(add_countvectors_featurizer(update))  # Featurizers
+    pipeline.append(add_diet_classifier(epochs=150))  # Intent Classifier
 
     return pipeline
 
 
 def transformer_network_diet_word_embedding_config(update):
     pipeline = [
-        add_spacy_nlp(),
-        {   # Tokenizer
-            "name": "SpacyTokenizer"
-        },
-        {   # Spacy Featurizer
-            "name": "SpacyFeaturizer"
-        }
+        {"name": "SpacyTokenizer"},  # Tokenizer
+        {"name": "SpacyFeaturizer"},  # Spacy Featurizer
     ]
-
-    # Bag of Words Featurizer
-    pipeline.extend(add_countvectors_featurizer(update))
-    # Intent Classifier
-    pipeline.append(add_diet_classifier(epochs=200))
-
-    if update.get("use_name_entities"):
-        pipeline.append({"name": "SpacyEntityExtractor"})
+    pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizer
+    pipeline.append(add_diet_classifier(epochs=200))  # Intent Classifier
 
     return pipeline
 
@@ -153,12 +139,8 @@ def transformer_network_diet_bert_config(update):
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
         }
     ]
-
-    # Bag of Words Featurizers
-    pipeline.extend(add_countvectors_featurizer(update))
-
-    # Intent Classifier
-    pipeline.append(add_diet_classifier(epochs=100, bert=True))
+    pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizers
+    pipeline.append(add_diet_classifier(epochs=100, bert=True))  # Intent Classifier
 
     return pipeline
 
@@ -176,24 +158,24 @@ def get_rasa_nlu_config(update):
             model == 'BERT' and language not in settings.BERT_LANGUAGES):
         algorithm = "transformer_network_diet"
 
-    print('languague:', language)
-    print('algorithm:', algorithm)
-
     pipeline.append(add_preprocessing(update))
+
+    if update.get("use_name_entities") or algorithm in ['neural_network_external', 'transformer_network_diet_word_embedding']:
+        pipeline.append(add_spacy_nlp())
 
     if algorithm == "neural_network_internal":
         pipeline.extend(legacy_internal_config(update))
     elif algorithm == "neural_network_external":
-        pipeline.append(add_spacy_nlp())
         pipeline.extend(legacy_external_config(update))
-        if update.get("use_name_entities"):
-            pipeline.append({"name": "SpacyEntityExtractor"})
     elif algorithm == "transformer_network_diet_bert":
         pipeline.extend(transformer_network_diet_bert_config(update))
     elif algorithm == "transformer_network_diet_word_embedding":
         pipeline.extend(transformer_network_diet_word_embedding_config(update))
     else:
         pipeline.extend(transformer_network_diet_config(update))
+
+    if update.get("use_name_entities"):
+        pipeline.append({"name": "SpacyEntityExtractor"})
 
     print(f"New pipeline: {pipeline}")
 
