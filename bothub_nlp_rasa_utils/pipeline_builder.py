@@ -148,7 +148,6 @@ def transformer_network_diet_bert_config(update):
 def get_rasa_nlu_config(update):
 
     pipeline = []
-
     # algorithm = choose_best_algorithm(update.get("language"))
     algorithm = update.get('algorithm')
     language = update.get('language')
@@ -163,7 +162,7 @@ def get_rasa_nlu_config(update):
 
     pipeline.append(add_preprocessing(update))
 
-    if update.get("use_name_entities") or algorithm in ['neural_network_external', 'transformer_network_diet_word_embedding']:
+    if (update.get("use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES) or algorithm in ['neural_network_external', 'transformer_network_diet_word_embedding']:
         pipeline.append(add_spacy_nlp())
 
     if algorithm == "neural_network_internal":
@@ -177,7 +176,7 @@ def get_rasa_nlu_config(update):
     else:
         pipeline.extend(transformer_network_diet_config(update))
 
-    if update.get("use_name_entities"):
+    if update.get("use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES:
         pipeline.append({"name": "SpacyEntityExtractor"})
 
     print(f"New pipeline: {pipeline}")
