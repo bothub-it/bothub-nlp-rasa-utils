@@ -2,23 +2,38 @@ import json
 import logging
 import uuid
 
+from _collections import defaultdict
+
+from rasa.nlu.model import Trainer
+from rasa.nlu.components import ComponentBuilder
 from rasa.nlu import __version__ as rasa_version
-from rasa.nlu.test import get_entity_extractors, plot_attribute_confidences
-from rasa.nlu.test import get_evaluation_metrics
 from rasa.nlu.test import (
     merge_labels,
     _targets_predictions_from,
     remove_empty_intent_examples,
     get_eval_data,
     align_all_entity_predictions,
+    combine_result,
+    plot_confusion_matrix,
+    substitute_labels,
+    get_evaluation_metrics,
+    get_entity_extractors,
+    plot_attribute_confidences,
+    generate_folds,
+    _contains_entity_labels
 )
-from rasa.nlu.test import plot_confusion_matrix
-from rasa.nlu.test import substitute_labels
-from rasa.nlu.training_data import Message
-from rasa.nlu.training_data import TrainingData
 
-from .utils import backend
-from .utils import update_interpreters
+from rasa.nlu.test import (
+    IntentMetrics,
+    EntityMetrics,
+    ResponseSelectionMetrics,
+    IntentEvaluationResult,
+    EntityEvaluationResult,
+    ResponseSelectionEvaluationResult,
+)
+from rasa.nlu.training_data import Message, TrainingData
+from .utils import backend, update_interpreters, get_examples_request, PokeLogging
+from .pipeline_builder import get_rasa_nlu_config
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +48,7 @@ excluded_itens = [
 
 
 def collect_incorrect_entity_predictions(
-    entity_results, merged_predictions, merged_targets
+        entity_results, merged_predictions, merged_targets
 ):
     errors = []
     offset = 0
@@ -56,9 +71,9 @@ def collect_incorrect_entity_predictions(
 def is_start_end_in_list(entity, predicted_entities):
     for predicted_entity in predicted_entities:
         if (
-            entity.get("start") == predicted_entity.get("start")
-            and entity.get("end") == predicted_entity.get("end")
-            and entity.get("value") == predicted_entity.get("value")
+                entity.get("start") == predicted_entity.get("start")
+                and entity.get("end") == predicted_entity.get("end")
+                and entity.get("value") == predicted_entity.get("value")
         ):
             return predicted_entity
     return False
@@ -67,10 +82,10 @@ def is_start_end_in_list(entity, predicted_entities):
 def is_entity_in_predicted(entity, predicted_entities, return_predicted=False):
     for predicted_entity in predicted_entities:
         if (
-            entity.get("start") == predicted_entity.get("start")
-            and entity.get("end") == predicted_entity.get("end")
-            and entity.get("value") == predicted_entity.get("value")
-            and entity.get("entity") == predicted_entity.get("entity")
+                entity.get("start") == predicted_entity.get("start")
+                and entity.get("end") == predicted_entity.get("end")
+                and entity.get("value") == predicted_entity.get("value")
+                and entity.get("entity") == predicted_entity.get("entity")
         ):
             if return_predicted:
                 return predicted_entity, True
@@ -91,15 +106,15 @@ def is_false_success(sentence_eval):
 
 
 def collect_successful_entity_predictions(
-    entity_results, merged_predictions, merged_targets
+        entity_results, merged_predictions, merged_targets
 ):
     successes = []
     offset = 0
     for entity_result in entity_results:
         for i in range(offset, offset + len(entity_result.tokens)):
             if (
-                merged_targets[i] == merged_predictions[i]
-                and merged_targets[i] != "no_entity"
+                    merged_targets[i] == merged_predictions[i]
+                    and merged_targets[i] != "no_entity"
             ):
                 successes.append(
                     {
@@ -328,7 +343,7 @@ def entity_rasa_nlu_data(entity, evaluate):  # pragma: no cover
     return {
         "start": entity.start,
         "end": entity.end,
-        "value": evaluate.text[entity.start : entity.end],
+        "value": evaluate.text[entity.start: entity.end],
         "entity": entity.entity.value,
     }
 
@@ -364,7 +379,7 @@ def get_formatted_log(merged_logs):
 
             for predicted_entity in predicted_entities:
                 if not is_start_end_in_list(
-                    predicted_entity, merged_log.get("true_entities")
+                        predicted_entity, merged_log.get("true_entities")
                 ) and not is_start_end_in_list(
                     predicted_entity, merged_log["swapped_error_entities"]
                 ):
@@ -382,108 +397,162 @@ def merge_intent_entity_log(intent_evaluation, entity_evaluation):
             if intent_log.get("text") == entity_log.get("text"):
                 intent_log.update(entity_log)
         merged_logs.append(intent_log)
-    
+
     return merged_logs
 
 
-def evaluate_update(repository_version, repository_authorization):
-    evaluations = backend().request_backend_start_evaluation(
-        repository_version, repository_authorization
+def evaluate_crossval_update(repository_version, by, repository_authorization, from_queue='celery'):
+    update_request = backend().request_backend_start_training_nlu(
+        repository_version, by, repository_authorization, from_queue
     )
-    training_examples = []
+    examples_list = get_examples_request(repository_version, repository_authorization)
 
-    for evaluate in evaluations:
-        training_examples.append(
-            Message.build(
-                text=evaluate.get("text"),
-                intent=evaluate.get("intent"),
-                entities=evaluate.get("entities"),
-            )
-        )
+    with PokeLogging() as pl:
+        try:
+            examples = []
 
-    test_data = TrainingData(training_examples=training_examples)
-    interpreter = update_interpreters.get(
-        repository_version, repository_authorization, rasa_version, use_cache=False
-    )
+            for example in examples_list:
+                examples.append(
+                    Message.build(
+                        text=example.get("text"),
+                        intent=example.get("intent"),
+                        entities=example.get("entities"),
+                    )
+                )
 
-    result = {
-        "intent_evaluation": None,
-        "entity_evaluation": None,
-        "response_selection_evaluation": None,
-    }
+            data = TrainingData(training_examples=examples)
+            rasa_nlu_config = get_rasa_nlu_config(update_request)
+            trainer = Trainer(rasa_nlu_config, ComponentBuilder(use_cache=False))
 
-    intent_results, response_selection_results, entity_results, = get_eval_data(
-        interpreter, test_data
-    )
+            result = {
+                "intent_evaluation": None,
+                "entity_evaluation": None,
+                "response_selection_evaluation": None,
+            }
 
-    if intent_results:
-        result["intent_evaluation"] = evaluate_intents(intent_results)
+            intent_train_metrics: IntentMetrics = defaultdict(list)
+            intent_test_metrics: IntentMetrics = defaultdict(list)
+            entity_train_metrics: EntityMetrics = defaultdict(lambda: defaultdict(list))
+            entity_test_metrics: EntityMetrics = defaultdict(lambda: defaultdict(list))
+            response_selection_train_metrics: ResponseSelectionMetrics = defaultdict(list)
+            response_selection_test_metrics: ResponseSelectionMetrics = defaultdict(list)
 
-    if entity_results:
-        extractors = get_entity_extractors(interpreter)
-        result["entity_evaluation"] = evaluate_entities(entity_results, extractors)
+            intent_results: List[IntentEvaluationResult] = []
+            entity_results: List[EntityEvaluationResult] = []
+            response_selection_test_results: List[ResponseSelectionEvaluationResult] = ([])
+            entity_evaluation_possible = False
+            extractors: Set[Text] = set()
 
-    intent_evaluation = result.get("intent_evaluation")
-    entity_evaluation = result.get("entity_evaluation")
+            for train, test in generate_folds(3, data):
+                interpreter = trainer.train(train)
 
-    merged_logs = merge_intent_entity_log(intent_evaluation, entity_evaluation)
-    log = get_formatted_log(merged_logs)
+                # calculate train accuracy
+                combine_result(
+                    intent_train_metrics,
+                    entity_train_metrics,
+                    response_selection_train_metrics,
+                    interpreter,
+                    train,
+                )
+                # calculate test accuracy
+                combine_result(
+                    intent_test_metrics,
+                    entity_test_metrics,
+                    response_selection_test_metrics,
+                    interpreter,
+                    test,
+                    intent_results,
+                    entity_results,
+                    response_selection_test_results,
+                )
 
-    charts = plot_and_save_charts(repository_version, intent_results)
-    evaluate_result = backend().request_backend_create_evaluate_results(
-        {
-            "repository_version": repository_version,
-            "matrix_chart": charts.get("matrix_chart"),
-            "confidence_chart": charts.get("confidence_chart"),
-            "log": json.dumps(log),
-            "intentprecision": intent_evaluation.get("precision"),
-            "intentf1_score": intent_evaluation.get("f1_score"),
-            "intentaccuracy": intent_evaluation.get("accuracy"),
-            "entityprecision": entity_evaluation.get("precision"),
-            "entityf1_score": entity_evaluation.get("f1_score"),
-            "entityaccuracy": entity_evaluation.get("accuracy"),
-        },
-        repository_authorization,
-    )
+                if not extractors:
+                    extractors = get_entity_extractors(interpreter)
+                    entity_evaluation_possible = (
+                            entity_evaluation_possible
+                            or _contains_entity_labels(entity_results)
+                    )
 
-    intent_reports = intent_evaluation.get("report", {})
-    entity_reports = entity_evaluation.get("report", {})
+            if intent_results:
+                result["intent_evaluation"] = evaluate_intents(intent_results)
 
-    for intent_key in intent_reports.keys():
-        if intent_key and intent_key not in excluded_itens:
-            intent = intent_reports.get(intent_key)
+            if entity_results:
+                extractors = get_entity_extractors(interpreter)
+                result["entity_evaluation"] = evaluate_entities(entity_results, extractors)
 
-            backend().request_backend_create_evaluate_results_intent(
+            intent_evaluation = result.get("intent_evaluation")
+            entity_evaluation = result.get("entity_evaluation")
+
+            merged_logs = merge_intent_entity_log(intent_evaluation, entity_evaluation)
+            log = get_formatted_log(merged_logs)
+
+            charts = plot_and_save_charts(repository_version, intent_results)
+            evaluate_result = backend().request_backend_create_evaluate_results(
                 {
-                    "evaluate_id": evaluate_result.get("evaluate_id"),
-                    "precision": intent.get("precision"),
-                    "recall": intent.get("recall"),
-                    "f1_score": intent.get("f1-score"),
-                    "support": intent.get("support"),
-                    "intent_key": intent_key,
-                },
-                repository_authorization,
-            )
-
-    for entity_key in entity_reports.keys():
-        if entity_key and entity_key not in excluded_itens:  # pragma: no cover
-            entity = entity_reports.get(entity_key)
-
-            backend().request_backend_create_evaluate_results_score(
-                {
-                    "evaluate_id": evaluate_result.get("evaluate_id"),
                     "repository_version": repository_version,
-                    "precision": entity.get("precision"),
-                    "recall": entity.get("recall"),
-                    "f1_score": entity.get("f1-score"),
-                    "support": entity.get("support"),
-                    "entity_key": entity_key,
+                    "matrix_chart": charts.get("matrix_chart"),
+                    "confidence_chart": charts.get("confidence_chart"),
+                    "log": json.dumps(log),
+                    "intentprecision": intent_evaluation.get("precision"),
+                    "intentf1_score": intent_evaluation.get("f1_score"),
+                    "intentaccuracy": intent_evaluation.get("accuracy"),
+                    "entityprecision": entity_evaluation.get("precision"),
+                    "entityf1_score": entity_evaluation.get("f1_score"),
+                    "entityaccuracy": entity_evaluation.get("accuracy"),
                 },
                 repository_authorization,
             )
 
-    return {
-        "id": evaluate_result.get("evaluate_id"),
-        "version": evaluate_result.get("evaluate_version"),
-        "cross_validation": False
-    }
+            intent_reports = intent_evaluation.get("report", {})
+            entity_reports = entity_evaluation.get("report", {})
+
+            for intent_key in intent_reports.keys():
+                if intent_key and intent_key not in excluded_itens:
+                    intent = intent_reports.get(intent_key)
+
+                    backend().request_backend_create_evaluate_results_intent(
+                        {
+                            "evaluate_id": evaluate_result.get("evaluate_id"),
+                            "precision": intent.get("precision"),
+                            "recall": intent.get("recall"),
+                            "f1_score": intent.get("f1-score"),
+                            "support": intent.get("support"),
+                            "intent_key": intent_key,
+                        },
+                        repository_authorization,
+                    )
+
+            for entity_key in entity_reports.keys():
+                if entity_key and entity_key not in excluded_itens:  # pragma: no cover
+                    entity = entity_reports.get(entity_key)
+
+                    backend().request_backend_create_evaluate_results_score(
+                        {
+                            "evaluate_id": evaluate_result.get("evaluate_id"),
+                            "repository_version": repository_version,
+                            "precision": entity.get("precision"),
+                            "recall": entity.get("recall"),
+                            "f1_score": entity.get("f1-score"),
+                            "support": entity.get("support"),
+                            "entity_key": entity_key,
+                        },
+                        repository_authorization,
+                    )
+
+            return {
+                "id": evaluate_result.get("evaluate_id"),
+                "version": evaluate_result.get("evaluate_version"),
+                "cross_validation": True
+            }
+
+        except Exception as e:
+            logger.exception(e)
+            backend().request_backend_trainfail_nlu(
+                repository_version, repository_authorization
+            )
+            raise e
+        finally:
+            backend().request_backend_traininglog_nlu(
+                repository_version, pl.getvalue(), repository_authorization
+            )
+
