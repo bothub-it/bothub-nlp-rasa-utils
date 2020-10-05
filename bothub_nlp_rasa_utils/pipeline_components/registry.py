@@ -77,7 +77,7 @@ model_config_url = {
     "bert_english": "https://bothub-nlp-models.s3.amazonaws.com/bert-english/config.json",
 }
 
-model_url = {
+model_download_url = {
     "bert_portuguese": "https://bothub-nlp-models.s3.amazonaws.com/bert-portuguese/pytorch_model.bin",
     "bert_english": "https://bothub-nlp-models.s3.amazonaws.com/bert-english/tf_model.h5",
 }
