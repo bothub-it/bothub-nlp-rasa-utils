@@ -19,6 +19,15 @@ def add_preprocessing(update):
     }
 
 
+def add_regex_featurizer():
+    return [
+        {
+            "name": "RegexFeaturizer",
+            "case_sensitive": "False"
+        }
+    ]
+
+
 def add_countvectors_featurizer(update):
     featurizers = []
 
@@ -107,7 +116,8 @@ def transformer_network_diet_config(update):
     pipeline = [
         add_whitespace_tokenizer()
     ]
-    pipeline.extend(add_countvectors_featurizer(update))  # Featurizers
+    pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
+    pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizer
     pipeline.append(add_diet_classifier(epochs=150))  # Intent Classifier
 
     return pipeline
@@ -139,6 +149,7 @@ def transformer_network_diet_bert_config(update):
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
         }
     ]
+    pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizers
     pipeline.append(add_diet_classifier(epochs=100, bert=True))  # Intent Classifier
 

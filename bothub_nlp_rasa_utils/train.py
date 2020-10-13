@@ -1,12 +1,10 @@
 from tempfile import mkdtemp
-from collections import defaultdict
+import os
 
 from rasa.nlu import __version__ as rasa_version
 from rasa.nlu.model import Trainer
 from rasa.nlu.training_data import Message, TrainingData
 from rasa.nlu.components import ComponentBuilder
-from rasa.nlu.training_data.formats.readerwriter import TrainingDataWriter
-from rasa.nlu.utils import json_to_string
 
 from .utils import PokeLogging
 from .utils import backend
@@ -15,15 +13,22 @@ from .persistor import BothubPersistor
 from bothub_nlp_rasa_utils import logger
 from .pipeline_builder import get_rasa_nlu_config
 
-from rasa.nlu.training_data.formats.readerwriter import TrainingDataWriter
-
 
 def train_update(repository_version, by, repository_authorization, from_queue='celery'):  # pragma: no cover
     update_request = backend().request_backend_start_training_nlu(
         repository_version, by, repository_authorization, from_queue
     )
-    
+
     examples_list = get_examples_request(repository_version, repository_authorization)
+
+    language = update_request.get("language")
+    local_path = os.path.dirname(os.path.abspath(__file__))
+    try:
+        lookup_tables = [
+            {'name': 'location', 'elements': f'{local_path}/lookup_tables/{language}/location.txt'},
+        ]
+    except Exception as err:
+        raise err
 
     with PokeLogging() as pl:
         try:
@@ -40,7 +45,10 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
 
             rasa_nlu_config = get_rasa_nlu_config(update_request)
             trainer = Trainer(rasa_nlu_config, ComponentBuilder(use_cache=False))
-            training_data = TrainingData(training_examples=examples)
+            training_data = TrainingData(
+                training_examples=examples,
+                lookup_tables=lookup_tables,
+            )
 
             trainer.train(training_data)
 
