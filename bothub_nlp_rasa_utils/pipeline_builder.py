@@ -23,7 +23,7 @@ def add_regex_featurizer():
     return [
         {
             "name": "RegexFeaturizer",
-            "case_sensitive": "False"
+            "case_sensitive": False
         }
     ]
 
