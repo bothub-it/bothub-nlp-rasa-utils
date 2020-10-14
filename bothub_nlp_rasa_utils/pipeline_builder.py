@@ -22,7 +22,7 @@ def add_preprocessing(update):
 def add_regex_featurizer():
     return [
         {
-            "name": "RegexFeaturizer",
+            "name": "bothub_nlp_rasa_utils.pipeline_components.regex_featurizer.RegexFeaturizerCustom",
             "case_sensitive": False
         }
     ]
