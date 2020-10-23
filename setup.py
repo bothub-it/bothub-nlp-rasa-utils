@@ -9,6 +9,7 @@ setup(
     version='1.1.27dev',
     description='Bothub NLP Rasa Utils',
     packages=find_packages(),
+    package_data={'bothub_nlp_rasa_utils.lookup_tables': ['en/location.txt', 'pt_br/flavor.txt', 'pt_br/location.txt']},
     install_requires=[
         'rasa==1.10.6',
         'transformers==2.11.0',
