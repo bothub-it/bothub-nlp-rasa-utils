@@ -28,6 +28,9 @@ class PreprocessingPortuguese(PreprocessingInterface):
             "tranquilo": r"\b(tranks)\b"
         }
 
+        for word in contractions.keys():
+            phrase = re.sub(contractions[word], word, phrase)
+
         emoji_contractions = {
             ":face_with_tears_of_joy:": "hahaha",  # 😂
             ":red_heart_selector:": "amor",  # ❤️
