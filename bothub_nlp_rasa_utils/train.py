@@ -14,21 +14,16 @@ from bothub_nlp_rasa_utils import logger
 from .pipeline_builder import get_rasa_nlu_config
 
 
-def load_lookup_tables(update_request, entities_from_dataset):
+def load_lookup_tables(update_request):
     lookup_tables = []
     language = update_request.get("language")
 
     # Try to load lookup_tables
     if update_request.get("use_lookup_tables"):
-        # Filter update lookup_tables if the entity is used in dataset
-        filtered_tables = [
-            table for table in update_request.get("use_lookup_tables")
-            if table in entities_from_dataset
-        ]
         # Check if lookup_table exists
-        # TODO: load lookup tables from backend instead of this
+        # TODO: load lookup tables from backend instead of this (locally)
         runtime_path = os.path.dirname(os.path.abspath(__file__))
-        for lookup_table in filtered_tables:
+        for lookup_table in update_request.get("use_lookup_tables"):
             file_path = f'{runtime_path}/lookup_tables/{language}/{lookup_table}.txt'
             if os.path.exists(file_path):
                 lookup_tables.append(
@@ -68,7 +63,6 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
     with PokeLogging() as pl:
         try:
             examples = []
-            entities_from_dataset = set()
 
             for example in examples_list:
                 examples.append(
@@ -78,14 +72,8 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
                         entities=example.get("entities"),
                     )
                 )
-                # Get all different entities in dataset
-                if example.get("entities"):
-                    for ex in example.get('entities', []):
-                        entity = ex.get('entity')
-                        if entity not in entities_from_dataset:
-                            entities_from_dataset.add(entity)
 
-            lookup_tables = load_lookup_tables(update_request, entities_from_dataset)
+            lookup_tables = load_lookup_tables(update_request)
             print("Loaded lookup_tables: " + str(lookup_tables))
 
             rasa_nlu_config = get_rasa_nlu_config(update_request)
