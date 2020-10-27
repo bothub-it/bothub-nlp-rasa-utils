@@ -13,7 +13,8 @@ setup(
     install_requires=[
         'rasa==1.10.6',
         'transformers==2.11.0',
-        'emoji==0.6.0'
+        'emoji==0.6.0',
+        'recognizers-text-suite'
     ],
     extras_require=extras_requires,
 )

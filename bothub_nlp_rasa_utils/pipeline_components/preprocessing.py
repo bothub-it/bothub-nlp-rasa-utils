@@ -25,17 +25,19 @@ class Preprocessing(Component):
     defaults = {"language": None}
 
     def __init__(
-        self, component_config: Optional[Dict[Text, Any]] = None
+            self,
+            component_config: Optional[Dict[Text, Any]] = None,
+            language: Optional[Text] = None,
     ) -> None:
         super().__init__(component_config)
-        self.language = component_config["language"]
+        self.language = language
 
 
     @classmethod
     def create(
         cls, component_config: Dict[Text, Any], config: RasaNLUModelConfig
     ) -> "Preprocessing":
-        return cls(component_config)
+        return cls(component_config, config.language)
 
     def provide_context(self) -> Dict[Text, Any]:
         return {"language": self.language}

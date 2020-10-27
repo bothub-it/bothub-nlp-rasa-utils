@@ -12,10 +12,9 @@ def add_whitespace_tokenizer():
     return {"name": "WhitespaceTokenizer"}
 
 
-def add_preprocessing(update):
+def add_preprocessing():
     return {
         "name": "bothub_nlp_rasa_utils.pipeline_components.preprocessing.Preprocessing",
-        "language": update.get("language"),
     }
 
 
@@ -62,16 +61,25 @@ def add_countvectors_featurizer(update):
 def add_legacy_countvectors_featurizer(update):
     if update.get("use_analyze_char"):
         return {
-                "name": "CountVectorsFeaturizer",
-                "analyzer": "char_wb",
-                "min_ngram": 3,
-                "max_ngram": 3
-            }
+            "name": "CountVectorsFeaturizer",
+            "analyzer": "char_wb",
+            "min_ngram": 3,
+            "max_ngram": 3
+        }
     else:
         return {
-                "name": "CountVectorsFeaturizer",
-                "token_pattern": r'(?u)\b\w+\b'
-            }
+            "name": "CountVectorsFeaturizer",
+            "token_pattern": r'(?u)\b\w+\b'
+        }
+
+
+def add_prebuilt_entities(update):
+    return [
+        {
+            "name": "bothub_nlp_rasa_utils.pipeline_components.microsoft_recognizers_extractor.MicrosoftRecognizersExtractor",
+            "dimensions": update['prebuilt_entities'].get('dimensions')
+        }
+    ]
 
 
 def add_embedding_intent_classifier():
@@ -167,7 +175,6 @@ def transformer_network_diet_bert_config(update):
 
 
 def get_rasa_nlu_config(update):
-
     pipeline = []
     # algorithm = choose_best_algorithm(update.get("language"))
     algorithm = update.get('algorithm')
@@ -181,9 +188,11 @@ def get_rasa_nlu_config(update):
         else:
             algorithm = "transformer_network_diet"
 
-    pipeline.append(add_preprocessing(update))
+    pipeline.append(add_preprocessing())
 
-    if (update.get("use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES) or algorithm in ['neural_network_external', 'transformer_network_diet_word_embedding']:
+    if (update.get(
+            "use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES) or algorithm in [
+        'neural_network_external', 'transformer_network_diet_word_embedding']:
         pipeline.append(add_spacy_nlp())
 
     if algorithm == "neural_network_internal":
@@ -197,10 +206,20 @@ def get_rasa_nlu_config(update):
     else:
         pipeline.extend(transformer_network_diet_config(update))
 
-    if update.get("use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES:
+    if update.get(
+            "use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES:
         pipeline.append({"name": "SpacyEntityExtractor"})
 
-    print(f"New pipeline: {pipeline}")
+    update['prebuilt_entities'] = {
+        'dimensions': ['number', 'ordinal', 'age', 'currency', 'dimension', 'temperature', 'datetime', 'phone_number',
+                       'email']}
+
+    if update.get("prebuilt_entities"):
+        pipeline.extend(add_prebuilt_entities(update))
+    import json
+    print(f"New pipeline:")
+    for component in pipeline:
+        print(json.dumps(component, indent=2))
 
     return RasaNLUModelConfig(
         {
