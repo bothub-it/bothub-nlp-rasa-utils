@@ -28,7 +28,7 @@ def rasa_format(entity):
         'entity': entity.type_name,
         'start': entity.start,
         'end': entity.end,
-        'value0': entity.text
+        'value': entity.text
     }
 
 
@@ -53,11 +53,7 @@ class MicrosoftRecognizersExtractor(EntityExtractor):
         return cls(component_config, config.language)
 
     def process(self, message: Message, **kwargs: Any) -> None:
-        # can't use the existing doc here (spacy_doc on the message)
-        # because tokens are lower cased which is bad for NER
         dimensions = self.component_config["dimensions"]
-        print(self.language)
-        print(dimensions)
         extracted = self.add_extractor_name(self.extract_entities(message.text, self.language, dimensions))
         message.set(ENTITIES, message.get(ENTITIES, []) + extracted, add_to_output=True)
 
@@ -71,5 +67,4 @@ class MicrosoftRecognizersExtractor(EntityExtractor):
                     for entity in entities:
                         entities_group.append(rasa_format(entity))
 
-        print(entities_group)
         return entities_group
