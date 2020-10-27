@@ -22,6 +22,19 @@ recognizers = {
     'email': recognize_email
 }
 
+cultures = {
+    'zh': Culture.Chinese,
+    'nl': Culture.Dutch,
+    'en': Culture.English,
+    'fr': Culture.French,
+    'it': Culture.Italian,
+    'jp': Culture.Japanese,
+    'ko': Culture.Korean,
+    'pt-br': Culture.Portuguese,
+    'es': Culture.Spanish,
+    'tr': Culture.Turkish
+}
+
 
 def rasa_format(entity):
     return {
@@ -58,11 +71,11 @@ class MicrosoftRecognizersExtractor(EntityExtractor):
         message.set(ENTITIES, message.get(ENTITIES, []) + extracted, add_to_output=True)
 
     @staticmethod
-    def extract_entities(user_input: str, culture: str, selected_dimensions):
+    def extract_entities(user_input: str, language: str, selected_dimensions):
         entities_group = []
         for dimension in recognizers:
             if dimension in selected_dimensions:
-                entities = recognizers[dimension](user_input, culture)
+                entities = recognizers[dimension](user_input, cultures.get(language, Culture.English))
                 if entities:
                     for entity in entities:
                         entities_group.append(rasa_format(entity))
