@@ -78,6 +78,9 @@ def add_prebuilt_entities(update):
         {
             "name": "bothub_nlp_rasa_utils.pipeline_components.microsoft_recognizers_extractor.MicrosoftRecognizersExtractor",
             "dimensions": update['prebuilt_entities'].get('dimensions')
+        },
+        {   # Regex Entity Extractor
+            "name": "bothub_nlp_rasa_utils.pipeline_components.regex_entity_extractor.RegexEntityExtractorCustom",
         }
     ]
 
@@ -133,7 +136,6 @@ def transformer_network_diet_config(update):
         add_whitespace_tokenizer()
     ]
     # pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
-    pipeline.extend(add_regex_entity_extractor())  # Regex Entity Extractor
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizer
     pipeline.append(add_diet_classifier(epochs=150))  # Intent Classifier
 
@@ -167,7 +169,6 @@ def transformer_network_diet_bert_config(update):
         }
     ]
     # pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
-    pipeline.extend(add_regex_entity_extractor())  # Regex Entity Extractor
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizers
     pipeline.append(add_diet_classifier(epochs=100, bert=True))  # Intent Classifier
 
