@@ -69,12 +69,13 @@ class HFTransformersNLPCustom(HFTransformersNLP):
                 f"{model_weights_defaults[self.model_name]}"
             )
             self.model_weights = model_weights_defaults[self.model_name]
-            
+
 
         logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
         self.tokenizer = model_tokenizer_dict[self.model_name].from_pretrained(
             model_weights_defaults[self.model_name], cache_dir=None
         )
+        print(self.model_name)
         self.model = model_class_dict[self.model_name].from_pretrained(
             'model', cache_dir=None,
             from_pt=from_pt_dict.get(self.model_name, False)
