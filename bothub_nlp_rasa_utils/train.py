@@ -1,5 +1,4 @@
 from tempfile import mkdtemp
-import os
 
 from rasa.nlu import __version__ as rasa_version
 from rasa.nlu.model import Trainer
@@ -14,49 +13,10 @@ from bothub_nlp_rasa_utils import logger
 from .pipeline_builder import get_rasa_nlu_config
 
 
-def load_lookup_tables(update_request):
-    lookup_tables = []
-    language = update_request.get("language")
-
-    # Try to load lookup_tables
-    if update_request.get("use_lookup_tables"):
-        # Check if lookup_table exists
-        # TODO: load lookup tables from backend instead of this (locally)
-        runtime_path = os.path.dirname(os.path.abspath(__file__))
-        for lookup_table in update_request.get("use_lookup_tables"):
-            file_path = f'{runtime_path}/lookup_tables/{language}/{lookup_table}.txt'
-            if os.path.exists(file_path):
-                lookup_tables.append(
-                    {'name': lookup_table, 'elements': file_path},
-                )
-            else:
-                print("Not found lookup_table in path: " + file_path)
-
-    return lookup_tables
-
-
 def train_update(repository_version, by, repository_authorization, from_queue='celery'):  # pragma: no cover
     update_request = backend().request_backend_start_training_nlu(
         repository_version, by, repository_authorization, from_queue
     )
-
-    """ update_request (v2/repository/nlp/authorization/train/start_training/) signature:
-    {
-        'language': 'pt_br', 
-        'repository_version': 47, 
-        'repository_uuid': '1d8e0d6f-1941-42a3-84c5-788706c7072e', 
-        'intent': [4, 5], 
-        'algorithm': 'transformer_network_diet_bert', 
-        'use_name_entities': False, 
-        'use_competing_intents': False, 
-        'use_analyze_char': False, 
-        'total_training_end': 0
-    }
-    """
-    # TODO: update_request must include list of
-    #       lookup_tables the user choose to use in webapp
-    #       Example:
-    update_request["use_lookup_tables"] = ['location', 'flavor']
 
     examples_list = get_examples_request(repository_version, repository_authorization)
 
@@ -73,14 +33,10 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
                     )
                 )
 
-            lookup_tables = load_lookup_tables(update_request)
-            print("Loaded lookup_tables: " + str(lookup_tables))
-
             rasa_nlu_config = get_rasa_nlu_config(update_request)
             trainer = Trainer(rasa_nlu_config, ComponentBuilder(use_cache=False))
             training_data = TrainingData(
-                training_examples=examples,
-                lookup_tables=lookup_tables,
+                training_examples=examples
             )
 
             trainer.train(training_data)
