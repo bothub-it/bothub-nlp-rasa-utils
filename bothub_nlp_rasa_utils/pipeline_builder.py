@@ -19,20 +19,16 @@ def add_preprocessing():
 
 
 def add_regex_featurizer():
-    return [
-        {
+    return {
             "name": "bothub_nlp_rasa_utils.pipeline_components.regex_featurizer.RegexFeaturizerCustom",
             "case_sensitive": False
-        }
-    ]
+    }
 
 
 def add_regex_entity_extractor():
-    return [
-        {
+    return {
             "name": "bothub_nlp_rasa_utils.pipeline_components.regex_entity_extractor.RegexEntityExtractorCustom",
-        }
-    ]
+    }
 
 
 def add_countvectors_featurizer(update):
@@ -73,13 +69,12 @@ def add_legacy_countvectors_featurizer(update):
         }
 
 
-def add_prebuilt_entities(update):
-    return [
-        {
+def add_microsoft_entity_extractor(update):
+    return {
             "name": "bothub_nlp_rasa_utils.pipeline_components.microsoft_recognizers_extractor.MicrosoftRecognizersExtractor",
             "dimensions": update['prebuilt_entities'].get('dimensions')
-        }
-    ]
+    }
+
 
 
 def add_embedding_intent_classifier():
@@ -132,8 +127,11 @@ def transformer_network_diet_config(update):
     pipeline = [
         add_whitespace_tokenizer()
     ]
+
     # pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
-    pipeline.extend(add_regex_entity_extractor())  # Regex Entity Extractor
+    pipeline.append(add_regex_entity_extractor())  # Regex Entity Extractor
+    if update.get('prebuilt_entities'):
+        pipeline.append(add_microsoft_entity_extractor(update))  # Microsoft Entity Extractor)
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizer
     pipeline.append(add_diet_classifier(epochs=150))  # Intent Classifier
 
@@ -164,10 +162,12 @@ def transformer_network_diet_bert_config(update):
         },
         {  # Bert Featurizer
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
-        }
+        },
+        add_regex_entity_extractor(),  # Regex Entity Extractor
     ]
+    if update.get('prebuilt_entities'):
+        pipeline.append(add_microsoft_entity_extractor(update))  # Microsoft Entity Extractor)
     # pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
-    pipeline.extend(add_regex_entity_extractor())  # Regex Entity Extractor
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizers
     pipeline.append(add_diet_classifier(epochs=100, bert=True))  # Intent Classifier
 
@@ -176,6 +176,11 @@ def transformer_network_diet_bert_config(update):
 
 def get_rasa_nlu_config(update):
     pipeline = []
+
+    update['prebuilt_entities'] = {
+        'dimensions': ['number', 'ordinal', 'age', 'currency', 'dimension', 'temperature', 'datetime', 'phone_number',
+                       'email']}
+
     # algorithm = choose_best_algorithm(update.get("language"))
     algorithm = update.get('algorithm')
     language = update.get('language')
@@ -210,12 +215,6 @@ def get_rasa_nlu_config(update):
             "use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES:
         pipeline.append({"name": "SpacyEntityExtractor"})
 
-    update['prebuilt_entities'] = {
-        'dimensions': ['number', 'ordinal', 'age', 'currency', 'dimension', 'temperature', 'datetime', 'phone_number',
-                       'email']}
-
-    if update.get("prebuilt_entities"):
-        pipeline.extend(add_prebuilt_entities(update))
     import json
     print(f"New pipeline:")
     for component in pipeline:

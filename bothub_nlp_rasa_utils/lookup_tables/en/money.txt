@@ -1,0 +1,2 @@
+regex U?\$ ?\d+(,\d{1,3})?
+regex \d+(,\d{1,3})? dollars?

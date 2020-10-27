@@ -56,7 +56,7 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
     # TODO: update_request must include list of
     #       lookup_tables the user choose to use in webapp
     #       Example:
-    update_request["use_lookup_tables"] = ['location', 'flavor']
+    update_request["use_lookup_tables"] = ['location', 'flavor', 'cep', 'cpf', 'email']
 
     examples_list = get_examples_request(repository_version, repository_authorization)
 

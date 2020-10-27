@@ -72,7 +72,10 @@ def _generate_lookup_regex(lookup_table: Dict[Text, Union[Text, List[Text]]]) ->
 
     # sanitize the regex, escape special characters
     preprocessor = PreprocessingBase()
-    elements_sanitized = [re.escape(preprocessor.preprocess(e)) for e in elements_to_regex]
+    elements_sanitized = [re.escape(preprocessor.preprocess(e)) if not e.startswith('regex ')
+                          else e.split('regex ')[1]
+                          for e in elements_to_regex]
+
 
     # regex matching elements with word boundaries on either side
     return "(\\b" + "\\b|\\b".join(elements_sanitized) + "\\b)"
@@ -95,6 +98,7 @@ def _convert_lookup_tables_to_regex(
         if use_only_entities and table["name"] not in training_data.entities:
             continue
         regex_pattern = _generate_lookup_regex(table)
+        print(regex_pattern)
         # if file is empty
         if regex_pattern == r"(\b\b)":
             continue
