@@ -77,7 +77,7 @@ class HFTransformersNLPCustom(HFTransformersNLP):
         )
         print(self.model_name)
         self.model = model_class_dict[self.model_name].from_pretrained(
-            'model', cache_dir=None,
+            self.model_name, cache_dir=None,
             from_pt=from_pt_dict.get(self.model_name, False)
         )
         from pprint import pprint
