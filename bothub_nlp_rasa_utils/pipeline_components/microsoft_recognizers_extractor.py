@@ -30,7 +30,7 @@ cultures = {
     'it': Culture.Italian,
     'jp': Culture.Japanese,
     'ko': Culture.Korean,
-    'pt-br': Culture.Portuguese,
+    'pt_br': Culture.Portuguese,
     'es': Culture.Spanish,
     'tr': Culture.Turkish
 }
@@ -40,30 +40,28 @@ def rasa_format(entity):
     return {
         'entity': entity.type_name,
         'start': entity.start,
-        'end': entity.end,
+        'end': entity.end + 1,
         'value': entity.text
     }
 
 
 class MicrosoftRecognizersExtractor(EntityExtractor):
     defaults = {
-        "dimensions": None
+        "dimensions": None,
     }
 
     def __init__(
             self,
             component_config: Optional[Dict[Text, Any]] = None,
-            language: Optional[Text] = None,
     ) -> None:
-        super().__init__(component_config)
-        self.language = language
+        super(MicrosoftRecognizersExtractor, self).__init__(component_config)
+        self.language = self.component_config["language"]
 
     @classmethod
     def create(
             cls, component_config: Dict[Text, Any], config: RasaNLUModelConfig
     ) -> "MicrosoftRecognizersExtractor":
-
-        return cls(component_config, config.language)
+        return cls(component_config)
 
     def process(self, message: Message, **kwargs: Any) -> None:
         dimensions = self.component_config["dimensions"]

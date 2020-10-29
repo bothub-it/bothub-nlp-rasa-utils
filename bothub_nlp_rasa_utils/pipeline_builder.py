@@ -12,9 +12,10 @@ def add_whitespace_tokenizer():
     return {"name": "WhitespaceTokenizer"}
 
 
-def add_preprocessing():
+def add_preprocessing(update):
     return {
         "name": "bothub_nlp_rasa_utils.pipeline_components.preprocessing.Preprocessing",
+        "language": update.get('language')
     }
 
 
@@ -71,10 +72,10 @@ def add_legacy_countvectors_featurizer(update):
 
 def add_microsoft_entity_extractor(update):
     return {
-            "name": "bothub_nlp_rasa_utils.pipeline_components.microsoft_recognizers_extractor.MicrosoftRecognizersExtractor",
-            "dimensions": update['prebuilt_entities'].get('dimensions')
+        "name": "bothub_nlp_rasa_utils.pipeline_components.microsoft_recognizers_extractor.MicrosoftRecognizersExtractor",
+        "dimensions": update['prebuilt_entities'].get('dimensions'),
+        "language": update.get('language')
     }
-
 
 
 def add_embedding_intent_classifier():
@@ -193,7 +194,7 @@ def get_rasa_nlu_config(update):
         else:
             algorithm = "transformer_network_diet"
 
-    pipeline.append(add_preprocessing())
+    pipeline.append(add_preprocessing(update))
 
     if (update.get(
             "use_name_entities") and algorithm != 'transformer_network_diet_bert' and language in settings.SPACY_LANGUAGES) or algorithm in [
