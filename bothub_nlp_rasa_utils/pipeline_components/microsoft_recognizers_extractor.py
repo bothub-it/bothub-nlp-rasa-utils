@@ -40,7 +40,7 @@ def rasa_format(entity):
     return {
         'entity': entity.type_name,
         'start': entity.start,
-        'end': entity.end,
+        'end': entity.end + 1,
         'value': entity.text
     }
 
