@@ -73,7 +73,7 @@ def add_legacy_countvectors_featurizer(update):
 def add_microsoft_entity_extractor(update):
     return {
         "name": "bothub_nlp_rasa_utils.pipeline_components.microsoft_recognizers_extractor.MicrosoftRecognizersExtractor",
-        "dimensions": update['prebuilt_entities'].get('dimensions'),
+        "dimensions": update['prebuilt_entities'],
         "language": update.get('language')
     }
 
@@ -125,12 +125,9 @@ def legacy_external_config(update):
 
 
 def transformer_network_diet_config(update):
-    pipeline = [
-        add_whitespace_tokenizer()
-    ]
+    pipeline = [add_whitespace_tokenizer(), add_regex_entity_extractor()]
 
     # pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
-    pipeline.append(add_regex_entity_extractor())  # Regex Entity Extractor
     if update.get('prebuilt_entities'):
         pipeline.append(add_microsoft_entity_extractor(update))  # Microsoft Entity Extractor)
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizer
@@ -177,10 +174,6 @@ def transformer_network_diet_bert_config(update):
 
 def get_rasa_nlu_config(update):
     pipeline = []
-
-    update['prebuilt_entities'] = {
-        'dimensions': ['number', 'ordinal', 'age', 'currency', 'dimension', 'temperature', 'datetime', 'phone_number',
-                       'email']}
 
     # algorithm = choose_best_algorithm(update.get("language"))
     algorithm = update.get('algorithm')
