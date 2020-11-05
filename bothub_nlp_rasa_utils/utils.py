@@ -74,16 +74,24 @@ class UpdateInterpreters:
 
         if interpreter and use_cache:
             return interpreter
+
         persistor = BothubPersistor(
             repository_version, repository_authorization, rasa_version
         )
         model_directory = mkdtemp()
         persistor.retrieve(str(update_request.get("repository_uuid")), model_directory)
-        self.interpreters[repository_name] = Interpreter(
-            None, {"language": update_request.get("language")}
-        ).load(model_directory, components.ComponentBuilder(use_cache=False))
-        return self.get(repository_version, repository_authorization, rasa_version)
 
+        interpreter = Interpreter(
+            None, {"language": update_request.get("language")}
+        )
+        interpreter = interpreter.load(
+                model_directory, components.ComponentBuilder(use_cache=False)
+        )
+
+        if use_cache:
+            self.interpreters[repository_name] = interpreter
+
+        return interpreter
 
 
 class PokeLoggingHandler(logging.StreamHandler):
