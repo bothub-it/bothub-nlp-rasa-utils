@@ -55,7 +55,6 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
     # TODO: update_request must include list of
     #       lookup_tables the user choose to use in webapp
     #       Example:
-    update_request["use_lookup_tables"] = ['country', 'cep', 'cpf', 'brand']
 
     examples_list = get_examples_request(repository_version, repository_authorization)
 
@@ -73,7 +72,7 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
                 )
 
             update_request['prebuilt_entities'] = ['number', 'ordinal', 'age', 'currency', 'dimension', 'temperature',
-                                                   'datetime', 'phone_number', 'email']
+                                                   'datetime', 'phone_number', 'email', 'country', 'cep', 'cpf', 'brand']
             
             lookup_tables = load_lookup_tables(update_request)
             print("Loaded lookup_tables: " + str(lookup_tables))
