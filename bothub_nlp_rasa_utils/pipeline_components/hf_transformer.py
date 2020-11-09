@@ -49,6 +49,7 @@ class HFTransformersNLPCustom(HFTransformersNLP):
             model_weights_defaults,
             model_tokenizer_dict,
             from_pt_dict,
+            language_to_model
         )
 
         self.model_name = self.component_config["model_name"]
@@ -72,7 +73,17 @@ class HFTransformersNLPCustom(HFTransformersNLP):
 
         logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
 
-        self.tokenizer, self.model = nlp_language
+        if settings.AIPLATFORM_LANGUAGE_MODEL == "BERT":
+            model_name = language_to_model[settings.BOTHUB_NLP_LANGUAGE_QUEUE]
+            self.tokenizer = model_tokenizer_dict[model_name].from_pretrained(
+                model_weights_defaults[model_name], cache_dir=None
+            )
+            self.model = model_class_dict[model_name].from_pretrained(
+                model_name, cache_dir=None,
+                from_pt=from_pt_dict.get(model_name, False)
+            )
+        else:
+            self.tokenizer, self.model = nlp_language
         from pprint import pprint
 
         # Use a universal pad token since all transformer architectures do not have a
