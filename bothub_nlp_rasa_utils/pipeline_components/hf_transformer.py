@@ -72,11 +72,16 @@ class HFTransformersNLPCustom(HFTransformersNLP):
 
         logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
 
-        if settings.AIPLATFORM_LANGUAGE_MODEL == "BERT":
+        if settings.AIPLATFORM_LANGUAGE_MODEL:
             model_name = language_to_model[settings.BOTHUB_NLP_LANGUAGE_QUEUE]
             self.tokenizer = model_tokenizer_dict[model_name].from_pretrained(
                 model_weights_defaults[model_name], cache_dir=None
             )
+            print("Model name: ", model_name)
+            import os
+            print("Current directory: ", os.getcwd())
+            print(os.listdir())
+
             self.model = model_class_dict[model_name].from_pretrained(
                 model_name, cache_dir=None,
                 from_pt=from_pt_dict.get(model_name, False)
