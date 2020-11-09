@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict, List, Text, Tuple, Optional
 
-from bothub_nlp_celery.app import nlp_language
 from rasa.nlu.tokenizers.whitespace_tokenizer import WhitespaceTokenizer
 from rasa.nlu.components import Component
 from rasa.nlu.config import RasaNLUModelConfig
@@ -83,6 +82,7 @@ class HFTransformersNLPCustom(HFTransformersNLP):
                 from_pt=from_pt_dict.get(model_name, False)
             )
         else:
+            from bothub_nlp_celery.app import nlp_language
             self.tokenizer, self.model = nlp_language
         from pprint import pprint
 
