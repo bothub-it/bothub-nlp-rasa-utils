@@ -180,8 +180,7 @@ def get_rasa_nlu_config(update):
     language = update.get('language')
 
     model = ALGORITHM_TO_LANGUAGE_MODEL[algorithm]
-    if (model == 'SPACY' and language not in settings.SPACY_LANGUAGES) or (
-            model == 'BERT' and language not in settings.BERT_LANGUAGES):
+    if model == 'SPACY' and language not in settings.SPACY_LANGUAGES:
         if algorithm == 'neural_network_external':
             algorithm = "neural_network_internal"
         else:
