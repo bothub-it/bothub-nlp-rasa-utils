@@ -125,11 +125,11 @@ def legacy_external_config(update):
 
 
 def transformer_network_diet_config(update):
-    pipeline = [add_whitespace_tokenizer(), add_regex_entity_extractor()]
+    pipeline = [add_whitespace_tokenizer()]
 
-    # pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
-    if update.get('prebuilt_entities'):
-        pipeline.append(add_microsoft_entity_extractor(update))  # Microsoft Entity Extractor)
+    # pipeline.append(add_regex_entity_extractor())
+    # if update.get('prebuilt_entities'):
+    #     pipeline.append(add_microsoft_entity_extractor(update))  # Microsoft Entity Extractor)
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizer
     pipeline.append(add_diet_classifier(epochs=150))  # Intent Classifier
 
@@ -151,7 +151,7 @@ def transformer_network_diet_bert_config(update):
     pipeline = [
         {  # NLP
             "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
-            "model_name": language_to_model.get(update.get("language")),
+            "model_name": language_to_model.get(update.get("language"), 'bert_multilang'),
         },
         {  # Tokenizer
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
@@ -161,11 +161,11 @@ def transformer_network_diet_bert_config(update):
         {  # Bert Featurizer
             "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
         },
-        add_regex_entity_extractor(),  # Regex Entity Extractor
     ]
-    if update.get('prebuilt_entities'):
-        pipeline.append(add_microsoft_entity_extractor(update))  # Microsoft Entity Extractor)
-    # pipeline.extend(add_regex_featurizer())  # RegexFeaturizer
+    # pipeline.append(add_regex_entity_extractor())
+    # if update.get('prebuilt_entities'):
+    #     pipeline.append(add_microsoft_entity_extractor(update))  # Microsoft Entity Extractor)
+
     pipeline.extend(add_countvectors_featurizer(update))  # Bag of Words Featurizers
     pipeline.append(add_diet_classifier(epochs=100, bert=True))  # Intent Classifier
 
@@ -180,8 +180,7 @@ def get_rasa_nlu_config(update):
     language = update.get('language')
 
     model = ALGORITHM_TO_LANGUAGE_MODEL[algorithm]
-    if (model == 'SPACY' and language not in settings.SPACY_LANGUAGES) or (
-            model == 'BERT' and language not in settings.BERT_LANGUAGES):
+    if model == 'SPACY' and language not in settings.SPACY_LANGUAGES:
         if algorithm == 'neural_network_external':
             algorithm = "neural_network_internal"
         else:
