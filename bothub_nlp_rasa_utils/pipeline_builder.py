@@ -21,14 +21,14 @@ def add_preprocessing(update):
 
 def add_regex_featurizer():
     return {
-            "name": "bothub_nlp_rasa_utils.pipeline_components.regex_featurizer.RegexFeaturizerCustom",
-            "case_sensitive": False
+        "name": "bothub_nlp_rasa_utils.pipeline_components.regex_featurizer.RegexFeaturizerCustom",
+        "case_sensitive": False
     }
 
 
 def add_regex_entity_extractor():
     return {
-            "name": "bothub_nlp_rasa_utils.pipeline_components.regex_entity_extractor.RegexEntityExtractorCustom",
+        "name": "bothub_nlp_rasa_utils.pipeline_components.regex_entity_extractor.RegexEntityExtractorCustom",
     }
 
 
