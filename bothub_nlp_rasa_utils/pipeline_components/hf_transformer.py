@@ -71,7 +71,14 @@ class HFTransformersNLPCustom(HFTransformersNLP):
 
         logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
 
-        if settings.AIPLATFORM_LANGUAGE_MODEL:
+        try:
+            from bothub_nlp_celery.app import nlp_language
+            self.tokenizer, self.model = nlp_language
+        except TypeError:
+            logger.info(
+                f"Model could not be retrieved from celery cache "
+                f"Loading model {self.model_name} in memory"
+            )
             self.tokenizer = model_tokenizer_dict[self.model_name].from_pretrained(
                 model_weights_defaults[self.model_name], cache_dir=None
             )
@@ -79,9 +86,7 @@ class HFTransformersNLPCustom(HFTransformersNLP):
                 self.model_name, cache_dir=None,
                 from_pt=from_pt_dict.get(self.model_name, False)
             )
-        else:
-            from bothub_nlp_celery.app import nlp_language
-            self.tokenizer, self.model = nlp_language
+
         from pprint import pprint
 
         # Use a universal pad token since all transformer architectures do not have a
