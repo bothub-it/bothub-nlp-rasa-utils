@@ -66,14 +66,16 @@ class UpdateInterpreters:
 
         repository_name = (
             f"{update_request.get('version_id')}_"
-            f"{update_request.get('total_training_end')}_"
             f"{update_request.get('language')}"
         )
+        last_training = f"{update_request.get('total_training_end')}"
 
-        interpreter = self.interpreters.get(repository_name)
-
-        if interpreter and use_cache:
-            return interpreter
+        # try to fetch cache
+        cached_retrieved = self.interpreters.get(repository_name)
+        if cached_retrieved and use_cache:
+            # return cache only if it's the same training
+            if cached_retrieved["last_training"] == last_training:
+                return cached_retrieved["interpreter_data"]
 
         persistor = BothubPersistor(
             repository_version, repository_authorization, rasa_version
@@ -88,8 +90,12 @@ class UpdateInterpreters:
                 model_directory, components.ComponentBuilder(use_cache=False)
         )
 
+        # update/creates cache
         if use_cache:
-            self.interpreters[repository_name] = interpreter
+            self.interpreters[repository_name] = {
+                "last_training": last_training,
+                "interpreter_data": interpreter
+            }
 
         return interpreter
 
