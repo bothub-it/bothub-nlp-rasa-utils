@@ -60,6 +60,7 @@ class UpdateInterpreters:
     def get(
         self, repository_version, repository_authorization, rasa_version, use_cache=True
     ):
+        # TODO: new request without downloading bot data
         update_request = backend().request_backend_parse_nlu_persistor(
             repository_version, repository_authorization, rasa_version
         )
