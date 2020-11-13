@@ -25,10 +25,11 @@ class Preprocessing(Component):
     defaults = {"language": None}
 
     def __init__(
-        self, component_config: Optional[Dict[Text, Any]] = None
+            self,
+            component_config: Optional[Dict[Text, Any]] = None,
     ) -> None:
-        super().__init__(component_config)
-        self.language = component_config["language"]
+        super(Preprocessing, self).__init__(component_config)
+        self.language = self.component_config["language"]
 
 
     @classmethod
@@ -84,7 +85,7 @@ class Preprocessing(Component):
 
             if 'entities' in example.data and self.do_entities_overlap(example.data['entities']):
                 example.data['entities'] = self.remove_overlapping_entities(example.data['entities'])
-                
+
             example_text = example.text
             example_text = PREPROCESS_FACTORY.preprocess(example_text)
 
@@ -103,7 +104,7 @@ class Preprocessing(Component):
         # remove apostrophe from the phrase (important be first than s_regex regex)
         for APOSTROPHE in APOSTROPHE_OPTIONS:
             message.text = message.text.replace(APOSTROPHE, "")
-        
+
         PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(self.language)
 
         message.text = PREPROCESS_FACTORY.preprocess(message.text)
