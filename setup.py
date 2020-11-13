@@ -6,7 +6,7 @@ extras_requires = {
 
 setup(
     name='bothub_nlp_rasa_utils',
-    version='1.1.30',
+    version='1.1.30developing1',
     description='Bothub NLP Rasa Utils',
     packages=find_packages(),
     package_data={'bothub_nlp_rasa_utils.lookup_tables': ['en/country.txt', 'en/email.txt', 'pt_br/country.txt', 'pt_br/cep.txt', 'pt_br/cpf.txt', 'pt_br/email.txt', 'pt_br/brand.txt']},
