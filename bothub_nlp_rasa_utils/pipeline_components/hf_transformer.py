@@ -1,5 +1,6 @@
 import logging
 from typing import Any, Dict, List, Text, Tuple, Optional
+
 from rasa.nlu.tokenizers.whitespace_tokenizer import WhitespaceTokenizer
 from rasa.nlu.components import Component
 from rasa.nlu.config import RasaNLUModelConfig
@@ -22,13 +23,11 @@ from rasa.nlu.constants import (
 
 logger = logging.getLogger(__name__)
 
-
 from bothub_nlp_celery import settings
 
 
 class HFTransformersNLPCustom(HFTransformersNLP):
     """Utility Component for interfacing between Transformers library and Rasa OS.
-
     The transformers(https://github.com/huggingface/transformers) library
     is used to load pre-trained language models like BERT, GPT-2, etc.
     The component also tokenizes and featurizes dense featurizable attributes of each
@@ -70,18 +69,25 @@ class HFTransformersNLPCustom(HFTransformersNLP):
             )
             self.model_weights = model_weights_defaults[self.model_name]
 
-
         logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
-        self.tokenizer = model_tokenizer_dict[self.model_name].from_pretrained(
-            model_weights_defaults[self.model_name], cache_dir=None
-        )
-        print(self.model_name)
-        self.model = model_class_dict[self.model_name].from_pretrained(
-            self.model_name, cache_dir=None,
-            from_pt=from_pt_dict.get(self.model_name, False)
-        )
-        from pprint import pprint
 
+        try:
+            from bothub_nlp_celery.app import nlp_language
+            self.tokenizer, self.model = nlp_language
+        except TypeError:
+            logger.info(
+                f"Model could not be retrieved from celery cache "
+                f"Loading model {self.model_name} in memory"
+            )
+            self.tokenizer = model_tokenizer_dict[self.model_name].from_pretrained(
+                model_weights_defaults[self.model_name], cache_dir=None
+            )
+            self.model = model_class_dict[self.model_name].from_pretrained(
+                self.model_name, cache_dir=None,
+                from_pt=from_pt_dict.get(self.model_name, False)
+            )
+
+        from pprint import pprint
 
         # Use a universal pad token since all transformer architectures do not have a
         # consistent token. Instead of pad_token_id we use unk_token_id because

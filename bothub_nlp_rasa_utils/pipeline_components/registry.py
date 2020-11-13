@@ -38,7 +38,7 @@ from rasa.nlu.utils.hugging_face.transformers_pre_post_processors import (
 language_to_model = {
     "en": "bert_english",
     "pt_br": "bert_portuguese",
-    "other": "bert_multilang"
+    "multilang": "bert_multilang"
 }
 
 from_pt_dict = {

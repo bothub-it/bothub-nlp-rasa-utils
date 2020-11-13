@@ -6,9 +6,7 @@ from rasa.nlu.model import Trainer
 from rasa.nlu.training_data import Message, TrainingData
 from rasa.nlu.components import ComponentBuilder
 
-from .utils import PokeLogging
-from .utils import backend
-from .utils import get_examples_request
+from .utils import PokeLogging, backend, get_examples_request, intersection
 from .persistor import BothubPersistor
 from bothub_nlp_rasa_utils import logger
 from .pipeline_builder import get_rasa_nlu_config
@@ -17,17 +15,19 @@ from .pipeline_builder import get_rasa_nlu_config
 def load_lookup_tables(update_request):
     lookup_tables = []
     language = update_request.get("language")
+    supported_lookup_table_entities = ['country', 'cep', 'cpf', 'brand']
 
     # Try to load lookup_tables
-    if update_request.get("use_lookup_tables"):
-        # Check if lookup_table exists
+    if update_request.get("prebuilt_entities"):
         # TODO: load lookup tables from backend instead of this (locally)
         runtime_path = os.path.dirname(os.path.abspath(__file__))
-        for lookup_table in update_request.get("use_lookup_tables"):
-            file_path = f'{runtime_path}/lookup_tables/{language}/{lookup_table}.txt'
+        entities = intersection(update_request.get("prebuilt_entities"), supported_lookup_table_entities)
+        for entity in entities:
+            file_path = os.path.join(runtime_path, 'lookup_tables', language, entity+'.txt')
+            # Check if lookup_table exists
             if os.path.exists(file_path):
                 lookup_tables.append(
-                    {'name': lookup_table, 'elements': file_path},
+                    {'name': entity, 'elements': file_path},
                 )
             else:
                 print("Not found lookup_table in path: " + file_path)
@@ -55,8 +55,6 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
     """
     # TODO: update_request must include list of
     #       lookup_tables the user choose to use in webapp
-    #       Example:
-    update_request["use_lookup_tables"] = ['country', 'cep', 'cpf', 'brand']
 
     examples_list = get_examples_request(repository_version, repository_authorization)
 
@@ -73,6 +71,9 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
                     )
                 )
 
+            update_request['prebuilt_entities'] = ['number', 'ordinal', 'age', 'currency', 'dimension', 'temperature',
+                                                   'datetime', 'phone_number', 'email', 'country', 'cep', 'cpf',
+                                                   'brand']
             lookup_tables = load_lookup_tables(update_request)
             print("Loaded lookup_tables: " + str(lookup_tables))
 
@@ -92,8 +93,8 @@ def train_update(repository_version, by, repository_authorization, from_queue='c
                 mkdtemp(),
                 persistor=persistor,
                 fixed_model_name=f"{update_request.get('repository_version')}_"
-                f"{update_request.get('total_training_end')+1}_"
-                f"{update_request.get('language')}",
+                                 f"{update_request.get('total_training_end') + 1}_"
+                                 f"{update_request.get('language')}",
             )
         except Exception as e:
             logger.exception(e)

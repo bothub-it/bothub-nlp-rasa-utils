@@ -98,7 +98,6 @@ def _convert_lookup_tables_to_regex(
         if use_only_entities and table["name"] not in training_data.entities:
             continue
         regex_pattern = _generate_lookup_regex(table)
-        print(regex_pattern)
         # if file is empty
         if regex_pattern == r"(\b\b)":
             continue
