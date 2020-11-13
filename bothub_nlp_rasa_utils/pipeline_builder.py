@@ -15,7 +15,7 @@ def add_whitespace_tokenizer():
 def add_preprocessing(update):
     return {
         "name": "bothub_nlp_rasa_utils.pipeline_components.preprocessing.Preprocessing",
-        "language": update.get('language')
+        "language": update.get("language"),
     }
 
 
