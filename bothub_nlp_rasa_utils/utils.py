@@ -12,6 +12,25 @@ from rasa.nlu.model import Interpreter
 from .persistor import BothubPersistor
 
 
+def null_result(text):
+    return {
+        'intent':
+            {
+                'name': None,
+                'confidence': 0.0
+            },
+        'entities': [],
+        'intent_ranking': [],
+        'text': text
+    }
+
+
+def is_text_valid(text):
+    if text.replace(" ", ""):
+        return True
+    return False
+
+
 def intersection(lst1, lst2): 
     lst3 = [value for value in lst1 if value in lst2] 
     return lst3 
