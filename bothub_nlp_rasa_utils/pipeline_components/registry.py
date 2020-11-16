@@ -88,5 +88,5 @@ model_config_url = {
 model_download_url = {
     "bert_portuguese": "https://bothub-nlp-models.s3.amazonaws.com/bert-portuguese/pytorch_model.bin",
     "bert_english": "https://bothub-nlp-models.s3.amazonaws.com/bert-english/tf_model.h5",
-    "bert_multilang": "https://bothub-nlp-models.s3.amazonaws.com/bert_multilang/tf_model.h5"
+    "bert_multilang": "https://cdn.huggingface.co/bert-base-multilingual-uncased-tf_model.h5"
 }
