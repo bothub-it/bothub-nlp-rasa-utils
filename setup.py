@@ -11,7 +11,7 @@ setup(
     packages=find_packages(),
     package_data={'bothub_nlp_rasa_utils.lookup_tables': ['en/country.txt', 'en/email.txt', 'pt_br/country.txt', 'pt_br/cep.txt', 'pt_br/cpf.txt', 'pt_br/email.txt', 'pt_br/brand.txt']},
     install_requires=[
-        'rasa==1.10.6',
+        'rasa==2.1.0',
         'transformers==2.11.0',
         'emoji==0.6.0',
         'recognizers-text-suite'

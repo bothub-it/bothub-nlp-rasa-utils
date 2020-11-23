@@ -3,7 +3,8 @@ import os
 
 from rasa.nlu import __version__ as rasa_version
 from rasa.nlu.model import Trainer
-from rasa.nlu.training_data import Message, TrainingData
+from rasa.shared.nlu.training_data.message import Message
+from rasa.shared.nlu.training_data.training_data import TrainingData
 from rasa.nlu.components import ComponentBuilder
 
 from .utils import PokeLogging, backend, get_examples_request, intersection

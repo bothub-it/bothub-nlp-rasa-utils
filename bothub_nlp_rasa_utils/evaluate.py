@@ -4,7 +4,7 @@ import uuid
 
 from rasa.nlu import __version__ as rasa_version
 from rasa.nlu.test import get_entity_extractors, plot_attribute_confidences
-from rasa.nlu.test import get_evaluation_metrics
+from rasa.test import get_evaluation_metrics
 from rasa.nlu.test import (
     merge_labels,
     _targets_predictions_from,
@@ -12,10 +12,10 @@ from rasa.nlu.test import (
     get_eval_data,
     align_all_entity_predictions,
 )
-from rasa.nlu.test import plot_confusion_matrix
+from rasa.utils.plotting import plot_confusion_matrix
 from rasa.nlu.test import substitute_labels
-from rasa.nlu.training_data import Message
-from rasa.nlu.training_data import TrainingData
+from rasa.shared.nlu.training_data.message import Message
+from rasa.shared.nlu.training_data.training_data import TrainingData
 
 from .utils import backend
 from .utils import update_interpreters

@@ -149,17 +149,19 @@ def transformer_network_diet_word_embedding_config(update):
 
 def transformer_network_diet_bert_config(update):
     pipeline = [
-        {  # NLP
-            "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
-            "model_name": language_to_model.get(update.get("language"), 'bert_multilang'),
-        },
-        {  # Tokenizer
-            "name": "bothub_nlp_rasa_utils.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
-            "intent_tokenization_flag": False,
-            "intent_split_symbol": "_",
-        },
+        # {  # NLP
+        #     "name": "bothub_nlp_rasa_utils.pipeline_components.hf_transformer.HFTransformersNLPCustom",
+        #     "model_name": language_to_model.get(update.get("language"), 'bert_multilang'),
+        # },
+        # {  # Tokenizer
+        #     "name": "bothub_nlp_rasa_utils.pipeline_components.lm_tokenizer.LanguageModelTokenizerCustom",
+        #     "intent_tokenization_flag": False,
+        #     "intent_split_symbol": "_",
+        # },
+        add_whitespace_tokenizer(),
         {  # Bert Featurizer
-            "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom"
+            "name": "bothub_nlp_rasa_utils.pipeline_components.lm_featurizer.LanguageModelFeaturizerCustom",
+            "model_name": language_to_model.get(update.get("language"), 'bert_multilang'),
         },
     ]
     # pipeline.append(add_regex_entity_extractor())

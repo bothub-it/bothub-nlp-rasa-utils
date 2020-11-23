@@ -1,9 +1,9 @@
-import re
 from typing import Any, Optional, Text, Dict, List, Type
 
 from rasa.nlu.components import Component
 from rasa.nlu.config import RasaNLUModelConfig
-from rasa.nlu.training_data import Message, TrainingData
+from rasa.shared.nlu.training_data.message import Message
+from rasa.shared.nlu.training_data.training_data import TrainingData
 
 from ..nlp.preprocessing_factory import PreprocessingFactory
 
@@ -86,16 +86,19 @@ class Preprocessing(Component):
             if 'entities' in example.data and self.do_entities_overlap(example.data['entities']):
                 example.data['entities'] = self.remove_overlapping_entities(example.data['entities'])
 
-            example_text = example.text
+            example_text = example.data['text']
             example_text = PREPROCESS_FACTORY.preprocess(example_text)
 
             if example_text in not_repeated_phrases:
                 # remove example at this index from training_examples
                 training_data.training_examples.pop(idx - subtract_idx)
+                training_data.nlu_examples.pop(idx - subtract_idx)
                 subtract_idx += 1
             else:
                 not_repeated_phrases.add(example_text)
-                training_data.training_examples[idx - subtract_idx].text = example_text
+                training_data.training_examples[idx - subtract_idx].data['text'] = example_text
+
+        print("AFTER PREPROCESSING:", len(training_data.training_examples))
 
     def process(self, message: Message, **kwargs: Any) -> None:
         """Process an incoming message."""

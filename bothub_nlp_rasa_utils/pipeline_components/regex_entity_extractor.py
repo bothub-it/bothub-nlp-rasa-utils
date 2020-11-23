@@ -8,8 +8,8 @@ import rasa.utils.io
 
 from rasa.nlu.model import Metadata
 from rasa.nlu.config import RasaNLUModelConfig
-from rasa.nlu.training_data import TrainingData
-from rasa.nlu.training_data.message import Message
+from rasa.shared.nlu.training_data.training_data import TrainingData
+from rasa.shared.nlu.training_data.message import Message
 from rasa.nlu.constants import (
     ENTITIES,
     ENTITY_ATTRIBUTE_VALUE,

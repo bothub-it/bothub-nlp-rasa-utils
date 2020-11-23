@@ -7,6 +7,8 @@ from _collections import defaultdict
 from rasa.nlu.model import Trainer
 from rasa.nlu.components import ComponentBuilder
 from rasa.nlu import __version__ as rasa_version
+from rasa.utils.plotting import plot_confusion_matrix
+from rasa.test import get_evaluation_metrics
 from rasa.nlu.test import (
     merge_labels,
     _targets_predictions_from,
@@ -14,9 +16,7 @@ from rasa.nlu.test import (
     get_eval_data,
     align_all_entity_predictions,
     combine_result,
-    plot_confusion_matrix,
     substitute_labels,
-    get_evaluation_metrics,
     get_entity_extractors,
     plot_attribute_confidences,
     generate_folds,
@@ -31,7 +31,9 @@ from rasa.nlu.test import (
     EntityEvaluationResult,
     ResponseSelectionEvaluationResult,
 )
-from rasa.nlu.training_data import Message, TrainingData
+from rasa.shared.nlu.training_data.message import Message
+from rasa.shared.nlu.training_data.training_data import TrainingData
+
 from .utils import backend, update_interpreters, get_examples_request, PokeLogging
 from .pipeline_builder import get_rasa_nlu_config
 

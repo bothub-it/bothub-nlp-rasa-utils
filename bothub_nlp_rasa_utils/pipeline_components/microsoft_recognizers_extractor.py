@@ -1,14 +1,12 @@
-import typing
 from recognizers_suite import recognize_number, recognize_ordinal, recognize_age, recognize_currency, \
     recognize_dimension, recognize_temperature, recognize_datetime, recognize_phone_number, recognize_email
 from recognizers_suite import Culture, ModelResult
 
-from typing import Any, Dict, List, Text, Optional, Type
+from typing import Any, Dict, Text, Optional
 from rasa.nlu.constants import ENTITIES
-from rasa.nlu.components import Component
 from rasa.nlu.config import RasaNLUModelConfig
 from rasa.nlu.extractors.extractor import EntityExtractor
-from rasa.nlu.training_data import Message
+from rasa.shared.nlu.training_data.message import Message
 
 recognizers = {
     'number': recognize_number,

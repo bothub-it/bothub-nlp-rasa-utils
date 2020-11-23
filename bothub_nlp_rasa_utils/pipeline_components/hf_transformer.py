@@ -2,29 +2,27 @@ import logging
 from typing import Any, Dict, List, Text, Tuple, Optional
 
 from rasa.nlu.tokenizers.whitespace_tokenizer import WhitespaceTokenizer
-from rasa.nlu.components import Component
-from rasa.nlu.config import RasaNLUModelConfig
-from rasa.nlu.training_data import Message, TrainingData
-from rasa.nlu.tokenizers.tokenizer import Token
-import rasa.utils.train_utils as train_utils
 import numpy as np
 
 from rasa.nlu.utils.hugging_face.hf_transformers import HFTransformersNLP
 
-from rasa.nlu.constants import (
-    TEXT,
-    LANGUAGE_MODEL_DOCS,
-    DENSE_FEATURIZABLE_ATTRIBUTES,
-    TOKEN_IDS,
-    TOKENS,
-    SENTENCE_FEATURES,
-    SEQUENCE_FEATURES,
-)
-
 logger = logging.getLogger(__name__)
 
-from bothub_nlp_celery import settings
+from rasa.nlu.constants import (
+    NO_LENGTH_RESTRICTION,
+)
 
+MAX_SEQUENCE_LENGTHS = {
+    "bert_english": 512,
+    "bert_portuguese": 512,
+    "bert_multilang": 512,
+    "bert": 512,
+    "gpt": 512,
+    "gpt2": 512,
+    "xlnet": NO_LENGTH_RESTRICTION,
+    "distilbert": 512,
+    "roberta": 512,
+}
 
 class HFTransformersNLPCustom(HFTransformersNLP):
     """Utility Component for interfacing between Transformers library and Rasa OS.
@@ -34,14 +32,75 @@ class HFTransformersNLPCustom(HFTransformersNLP):
     message.
     """
 
-    def __init__(self, component_config: Optional[Dict[Text, Any]] = None) -> None:
+    def __init__(
+        self,
+        component_config: Optional[Dict[Text, Any]] = None,
+        skip_model_load: bool = False,
+    ) -> None:
         super(HFTransformersNLP, self).__init__(component_config)
 
-        self._load_model()
+        self._load_model_metadata()
+        self._load_model_instance(skip_model_load)
         self.whitespace_tokenizer = WhitespaceTokenizer()
+    # def _load_model(self) -> None:
+    #     """Try loading the model"""
+    #
+    #     from .registry import (
+    #         model_class_dict,
+    #         model_weights_defaults,
+    #         model_tokenizer_dict,
+    #         from_pt_dict,
+    #     )
+    #
+    #     self.model_name = self.component_config["model_name"]
+    #
+    #     if self.model_name not in model_class_dict:
+    #         raise KeyError(
+    #             f"'{self.model_name}' not a valid model name. Choose from "
+    #             f"{str(list(model_class_dict.keys()))}or create"
+    #             f"a new class inheriting from this class to support your model."
+    #         )
+    #
+    #     self.model_weights = self.component_config["model_weights"]
+    #     self.cache_dir = self.component_config["cache_dir"]
+    #
+    #     if not self.model_weights:
+    #         logger.info(
+    #             f"Model weights not specified. Will choose default model weights: "
+    #             f"{model_weights_defaults[self.model_name]}"
+    #         )
+    #         self.model_weights = model_weights_defaults[self.model_name]
+    #
+    #     logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
+    #
+    #     try:
+    #         from bothub_nlp_celery.app import nlp_language
+    #         self.tokenizer, self.model = nlp_language
+    #     except TypeError:
+    #         logger.info(
+    #             f"Model could not be retrieved from celery cache "
+    #             f"Loading model {self.model_name} in memory"
+    #         )
+    #         self.tokenizer = model_tokenizer_dict[self.model_name].from_pretrained(
+    #             model_weights_defaults[self.model_name], cache_dir=None
+    #         )
+    #         self.model = model_class_dict[self.model_name].from_pretrained(
+    #             self.model_name, cache_dir=None,
+    #             from_pt=from_pt_dict.get(self.model_name, False)
+    #         )
+    #
+    #     from pprint import pprint
+    #
+    #     # Use a universal pad token since all transformer architectures do not have a
+    #     # consistent token. Instead of pad_token_id we use unk_token_id because
+    #     # pad_token_id is not set for all architectures. We can't add a new token as
+    #     # well since vocabulary resizing is not yet supported for TF classes.
+    #     # Also, this does not hurt the model predictions since we use an attention mask
+    #     # while feeding input.
+    #     self.pad_token_id = self.tokenizer.unk_token_id
+    #     logger.debug(f"Loaded Tokenizer and Model for {self.model_name}")
 
-    def _load_model(self) -> None:
-        """Try loading the model"""
+    def _load_model_metadata(self) -> None:
 
         from .registry import (
             model_class_dict,
@@ -51,11 +110,12 @@ class HFTransformersNLPCustom(HFTransformersNLP):
         )
 
         self.model_name = self.component_config["model_name"]
-
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa")
+        print(self.model_name)
         if self.model_name not in model_class_dict:
             raise KeyError(
                 f"'{self.model_name}' not a valid model name. Choose from "
-                f"{str(list(model_class_dict.keys()))}or create"
+                f"{str(list(model_class_dict.keys()))} or create "
                 f"a new class inheriting from this class to support your model."
             )
 
@@ -68,6 +128,26 @@ class HFTransformersNLPCustom(HFTransformersNLP):
                 f"{model_weights_defaults[self.model_name]}"
             )
             self.model_weights = model_weights_defaults[self.model_name]
+
+        self.max_model_sequence_length = MAX_SEQUENCE_LENGTHS[self.model_name]
+
+    def _load_model_instance(self, skip_model_load: bool) -> None:
+        """Try loading the model instance.
+
+        Args:
+            skip_model_load: Skip loading the model instances to save time.
+            This should be True only for pytests
+        """
+        if skip_model_load:
+            # This should be True only during pytests
+            return
+
+        from .registry import (
+            model_class_dict,
+            model_weights_defaults,
+            model_tokenizer_dict,
+            from_pt_dict,
+        )
 
         logger.debug(f"Loading Tokenizer and Model for {self.model_name}")
 
@@ -87,8 +167,6 @@ class HFTransformersNLPCustom(HFTransformersNLP):
                 from_pt=from_pt_dict.get(self.model_name, False)
             )
 
-        from pprint import pprint
-
         # Use a universal pad token since all transformer architectures do not have a
         # consistent token. Instead of pad_token_id we use unk_token_id because
         # pad_token_id is not set for all architectures. We can't add a new token as
@@ -96,7 +174,6 @@ class HFTransformersNLPCustom(HFTransformersNLP):
         # Also, this does not hurt the model predictions since we use an attention mask
         # while feeding input.
         self.pad_token_id = self.tokenizer.unk_token_id
-        logger.debug(f"Loaded Tokenizer and Model for {self.model_name}")
 
     def _add_lm_specific_special_tokens(
             self, token_ids: List[List[int]]
