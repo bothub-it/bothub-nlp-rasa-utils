@@ -98,7 +98,6 @@ class Preprocessing(Component):
                 not_repeated_phrases.add(example_text)
                 training_data.training_examples[idx - subtract_idx].data['text'] = example_text
 
-        print("AFTER PREPROCESSING:", len(training_data.training_examples))
 
     def process(self, message: Message, **kwargs: Any) -> None:
         """Process an incoming message."""
