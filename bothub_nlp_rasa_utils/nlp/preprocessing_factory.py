@@ -10,7 +10,7 @@ class PreprocessingFactory:
 
     @staticmethod
     def get_preprocess(language: str = None):
-        
+
         try:
             if language == "en":
                 return PreprocessingEnglish()

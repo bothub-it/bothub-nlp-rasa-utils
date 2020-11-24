@@ -39,9 +39,12 @@ def _generate_lookup_regex(lookup_table: Dict[Text, Union[Text, List[Text]]]) ->
 
     # sanitize the regex, escape special characters
     preprocessor = PreprocessingBase()
-    elements_sanitized = [re.escape(preprocessor.preprocess(e)) if not e.startswith('regex ')
-                          else e.split('regex ')[1]
-                          for e in elements_to_regex]
+    elements_sanitized = [
+        re.escape(preprocessor.preprocess(e))
+        if not e.startswith("regex ")
+        else e.split("regex ")[1]
+        for e in elements_to_regex
+    ]
 
     # regex matching elements with word boundaries on either side
     return "(\\b" + "\\b|\\b".join(elements_sanitized) + "\\b)"
@@ -100,7 +103,9 @@ def extract_patterns(
     patterns = []
 
     if use_regexes:
-        patterns.extend(pattern_utils._collect_regex_features(training_data, use_only_entities))
+        patterns.extend(
+            pattern_utils._collect_regex_features(training_data, use_only_entities)
+        )
     if use_lookup_tables:
         patterns.extend(
             _convert_lookup_tables_to_regex(training_data, use_only_entities)
@@ -123,9 +128,9 @@ class RegexEntityExtractorCustom(EntityExtractor):
     }
 
     def __init__(
-            self,
-            component_config: Optional[Dict[Text, Any]] = None,
-            patterns: Optional[List[Dict[Text, Text]]] = None,
+        self,
+        component_config: Optional[Dict[Text, Any]] = None,
+        patterns: Optional[List[Dict[Text, Text]]] = None,
     ):
         super(RegexEntityExtractorCustom, self).__init__(component_config)
 
@@ -133,10 +138,10 @@ class RegexEntityExtractorCustom(EntityExtractor):
         self.patterns = patterns or []
 
     def train(
-            self,
-            training_data: TrainingData,
-            config: Optional[RasaNLUModelConfig] = None,
-            **kwargs: Any,
+        self,
+        training_data: TrainingData,
+        config: Optional[RasaNLUModelConfig] = None,
+        **kwargs: Any,
     ) -> None:
         self.patterns = extract_patterns(
             training_data,

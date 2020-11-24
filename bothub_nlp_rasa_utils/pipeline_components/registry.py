@@ -6,44 +6,34 @@ logging.getLogger("transformers.file_utils").setLevel(logging.WARNING)
 
 from transformers import (
     TFBertModel,
-    TFOpenAIGPTModel,
-    TFGPT2Model,
-    TFXLNetModel,
+    # TFOpenAIGPTModel,
+    # TFGPT2Model,
+    # TFXLNetModel,
     # TFXLMModel,
-    TFDistilBertModel,
-    TFRobertaModel,
+    # TFDistilBertModel,
+    # TFRobertaModel,
     BertTokenizer,
-    OpenAIGPTTokenizer,
-    GPT2Tokenizer,
-    XLNetTokenizer,
+    # OpenAIGPTTokenizer,
+    # GPT2Tokenizer,
+    # XLNetTokenizer,
     # XLMTokenizer,
-    DistilBertTokenizer,
-    RobertaTokenizer,
+    # DistilBertTokenizer,
+    # RobertaTokenizer,
 )
+
 from rasa.nlu.utils.hugging_face.transformers_pre_post_processors import (
     bert_tokens_pre_processor,
-    gpt_tokens_pre_processor,
-    xlnet_tokens_pre_processor,
-    roberta_tokens_pre_processor,
     bert_embeddings_post_processor,
-    gpt_embeddings_post_processor,
-    xlnet_embeddings_post_processor,
-    roberta_embeddings_post_processor,
     bert_tokens_cleaner,
-    openaigpt_tokens_cleaner,
-    gpt2_tokens_cleaner,
-    xlnet_tokens_cleaner,
 )
 
 language_to_model = {
     "en": "bert_english",
     "pt_br": "bert_portuguese",
-    "multilang": "bert_multilang"
+    "multilang": "bert_multilang",
 }
 
-from_pt_dict = {
-    "bert_portuguese": True
-}
+from_pt_dict = {"bert_portuguese": True}
 
 model_class_dict = {
     "bert_english": TFBertModel,
@@ -58,7 +48,7 @@ model_tokenizer_dict = {
 model_weights_defaults = {
     "bert_english": "bert-base-uncased",
     "bert_portuguese": "neuralmind/bert-base-portuguese-cased",
-    "bert_multilang": "bert-base-multilingual-uncased"
+    "bert_multilang": "bert-base-multilingual-uncased",
 }
 
 model_special_tokens_pre_processors = {
@@ -82,11 +72,11 @@ model_embeddings_post_processors = {
 model_config_url = {
     "bert_portuguese": "https://bothub-nlp-models.s3.amazonaws.com/bert-portuguese/config.json",
     "bert_english": "https://bothub-nlp-models.s3.amazonaws.com/bert-english/config.json",
-    "bert_multilang": "https://bothub-nlp-models.s3.amazonaws.com/bert_multilang/config.json"
+    "bert_multilang": "https://bothub-nlp-models.s3.amazonaws.com/bert_multilang/config.json",
 }
 
 model_download_url = {
     "bert_portuguese": "https://bothub-nlp-models.s3.amazonaws.com/bert-portuguese/pytorch_model.bin",
     "bert_english": "https://bothub-nlp-models.s3.amazonaws.com/bert-english/tf_model.h5",
-    "bert_multilang": "https://cdn.huggingface.co/bert-base-multilingual-uncased-tf_model.h5"
+    "bert_multilang": "https://cdn.huggingface.co/bert-base-multilingual-uncased-tf_model.h5",
 }

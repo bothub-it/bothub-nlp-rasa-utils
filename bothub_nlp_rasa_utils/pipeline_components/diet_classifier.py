@@ -3,26 +3,16 @@ from rasa.nlu.classifiers.diet_classifier import DIETClassifier
 from rasa.shared.constants import DOCS_URL_TRAINING_DATA_NLU
 from rasa.shared.nlu.training_data.training_data import TrainingData
 
-from rasa.nlu.constants import (
-    TOKENS_NAMES,
-    ENTITY_ATTRIBUTE_CONFIDENCE_TYPE,
-    ENTITY_ATTRIBUTE_CONFIDENCE_ROLE,
-    ENTITY_ATTRIBUTE_CONFIDENCE_GROUP,
-)
+from rasa.nlu.constants import TOKENS_NAMES
 
 from rasa.shared.nlu.constants import (
-    EXTRACTOR,
     ENTITIES,
     TEXT,
-    NO_ENTITY_TAG,
-    ENTITY_ATTRIBUTE_TYPE,
-    ENTITY_ATTRIBUTE_GROUP,
-    ENTITY_ATTRIBUTE_ROLE,
-    ENTITY_ATTRIBUTE_VALUE,
     ENTITY_ATTRIBUTE_START,
     ENTITY_ATTRIBUTE_END,
     INTENT,
 )
+
 
 class DIETClassifierCustom(DIETClassifier):
     @staticmethod

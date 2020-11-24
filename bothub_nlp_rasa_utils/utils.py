@@ -3,25 +3,20 @@ import logging
 import bothub_backend
 import contextvars
 import argparse
+
 from tempfile import mkdtemp
 from decouple import config
 from rasa.nlu import components
-from rasa.nlu.config import RasaNLUModelConfig
-
 from rasa.nlu.model import Interpreter
 from .persistor import BothubPersistor
 
 
 def null_result(text):
     return {
-        'intent':
-            {
-                'name': None,
-                'confidence': 0.0
-            },
-        'entities': [],
-        'intent_ranking': [],
-        'text': text
+        "intent": {"name": None, "confidence": 0.0},
+        "entities": [],
+        "intent_ranking": [],
+        "text": text,
     }
 
 
@@ -31,9 +26,9 @@ def is_text_valid(text):
     return False
 
 
-def intersection(lst1, lst2): 
-    lst3 = [value for value in lst1 if value in lst2] 
-    return lst3 
+def intersection(lst1, lst2):
+    lst3 = [value for value in lst1 if value in lst2]
+    return lst3
 
 
 def backend():
@@ -41,15 +36,16 @@ def backend():
 
     # Input Arguments
     PARSER.add_argument(
-        '--base_url',
-        help='Base URL API Engine.',
-        type=str, default=None)
+        "--base_url", help="Base URL API Engine.", type=str, default=None
+    )
 
     ARGUMENTS, _ = PARSER.parse_known_args()
 
     return bothub_backend.get_backend(
         "bothub_backend.bothub.BothubBackend",
-        ARGUMENTS.base_url if ARGUMENTS.base_url else config("BOTHUB_ENGINE_URL", default="https://api.bothub.it"),
+        ARGUMENTS.base_url
+        if ARGUMENTS.base_url
+        else config("BOTHUB_ENGINE_URL", default="https://api.bothub.it"),
     )
 
 
@@ -107,7 +103,6 @@ class UpdateInterpreters:
             None, {"language": update_request.get("language")}
         ).load(model_directory, components.ComponentBuilder(use_cache=False))
         return self.get(repository_version, repository_authorization, rasa_version)
-
 
 
 class PokeLoggingHandler(logging.StreamHandler):

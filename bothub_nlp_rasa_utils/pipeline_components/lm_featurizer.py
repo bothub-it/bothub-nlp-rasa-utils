@@ -1,16 +1,12 @@
 import logging
 import numpy as np
 from rasa.nlu.featurizers.dense_featurizer.lm_featurizer import LanguageModelFeaturizer
-from typing import List, Type
 from rasa.nlu.components import Component
-
 from typing import Any, Optional, Text, List, Type, Dict, Tuple
 
-logger = logging.getLogger(__name__)
+from rasa.nlu.constants import NO_LENGTH_RESTRICTION
 
-from rasa.nlu.constants import (
-    NO_LENGTH_RESTRICTION,
-)
+logger = logging.getLogger(__name__)
 
 MAX_SEQUENCE_LENGTHS = {
     "bert_english": 512,
@@ -24,8 +20,8 @@ MAX_SEQUENCE_LENGTHS = {
     "roberta": 512,
 }
 
-class LanguageModelFeaturizerCustom(LanguageModelFeaturizer):
 
+class LanguageModelFeaturizerCustom(LanguageModelFeaturizer):
     @classmethod
     def required_components(cls) -> List[Type[Component]]:
         return []
@@ -52,10 +48,7 @@ class LanguageModelFeaturizerCustom(LanguageModelFeaturizer):
 
     def _load_model_metadata(self) -> None:
 
-        from .registry import (
-            model_class_dict,
-            model_weights_defaults,
-        )
+        from .registry import model_class_dict, model_weights_defaults
 
         self.model_name = self.component_config["model_name"]
 
@@ -100,6 +93,7 @@ class LanguageModelFeaturizerCustom(LanguageModelFeaturizer):
 
         try:
             from bothub_nlp_celery.app import nlp_language
+
             self.tokenizer, self.model = nlp_language
         except TypeError:
             logger.info(
@@ -110,8 +104,9 @@ class LanguageModelFeaturizerCustom(LanguageModelFeaturizer):
                 model_weights_defaults[self.model_name], cache_dir=None
             )
             self.model = model_class_dict[self.model_name].from_pretrained(
-                self.model_name, cache_dir=None,
-                from_pt=from_pt_dict.get(self.model_name, False)
+                self.model_name,
+                cache_dir=None,
+                from_pt=from_pt_dict.get(self.model_name, False),
             )
 
         # Use a universal pad token since all transformer architectures do not have a
