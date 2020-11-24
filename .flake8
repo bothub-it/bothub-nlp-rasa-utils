@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 119
+ignore = E501,W503,E203
+exclude =
+  ./bothub_nlp_rasa_utils/pipeline_components/registry.py
