@@ -6,48 +6,15 @@ from typing import Any, Dict, List, Optional, Text, Union
 import rasa.utils.common
 import rasa.utils.io
 
+import rasa.nlu.utils.pattern_utils as pattern_utils
+
 from rasa.nlu.model import Metadata
 from rasa.nlu.config import RasaNLUModelConfig
 from rasa.shared.nlu.training_data.training_data import TrainingData
-from rasa.shared.nlu.training_data.message import Message
-from rasa.nlu.constants import (
-    ENTITIES,
-    ENTITY_ATTRIBUTE_VALUE,
-    ENTITY_ATTRIBUTE_START,
-    ENTITY_ATTRIBUTE_END,
-    TEXT,
-    ENTITY_ATTRIBUTE_TYPE,
-)
 from rasa.nlu.extractors.extractor import EntityExtractor
 from ..nlp.preprocessing_base import PreprocessingBase
 
 logger = logging.getLogger(__name__)
-
-
-def read_lookup_table_file(lookup_table_file: Text) -> List[Text]:
-    """Read the lookup table file.
-
-    Args:
-        lookup_table_file: the file path to the lookup table
-
-    Returns:
-        Elements listed in the lookup table file.
-    """
-    try:
-        f = open(lookup_table_file, "r", encoding=rasa.utils.io.DEFAULT_ENCODING)
-    except OSError:
-        raise ValueError(
-            f"Could not load lookup table {lookup_table_file}. "
-            f"Please make sure you've provided the correct path."
-        )
-
-    elements_to_regex = []
-    with f:
-        for line in f:
-            new_element = line.strip()
-            if new_element:
-                elements_to_regex.append(new_element)
-    return elements_to_regex
 
 
 def _generate_lookup_regex(lookup_table: Dict[Text, Union[Text, List[Text]]]) -> Text:
@@ -68,7 +35,7 @@ def _generate_lookup_regex(lookup_table: Dict[Text, Union[Text, List[Text]]]) ->
         elements_to_regex = lookup_elements
     # otherwise it's a file path.
     else:
-        elements_to_regex = read_lookup_table_file(lookup_elements)
+        elements_to_regex = pattern_utils.read_lookup_table_file(lookup_elements)
 
     # sanitize the regex, escape special characters
     preprocessor = PreprocessingBase()
@@ -76,13 +43,12 @@ def _generate_lookup_regex(lookup_table: Dict[Text, Union[Text, List[Text]]]) ->
                           else e.split('regex ')[1]
                           for e in elements_to_regex]
 
-
     # regex matching elements with word boundaries on either side
     return "(\\b" + "\\b|\\b".join(elements_sanitized) + "\\b)"
 
 
 def _convert_lookup_tables_to_regex(
-        training_data: TrainingData, use_only_entities: bool = False
+    training_data: TrainingData, use_only_entities: bool = False
 ) -> List[Dict[Text, Text]]:
     """Convert the lookup tables from the training data to regex patterns.
     Args:
@@ -107,34 +73,11 @@ def _convert_lookup_tables_to_regex(
     return patterns
 
 
-def _collect_regex_features(
-        training_data: TrainingData, use_only_entities: bool = False
-) -> List[Dict[Text, Text]]:
-    """Get regex features from training data.
-
-    Args:
-        training_data: The training data
-        use_only_entities: If True only regex features with a name equal to a entity
-          are considered.
-
-    Returns:
-        Regex features.
-    """
-    if not use_only_entities:
-        return training_data.regex_features
-
-    return [
-        regex
-        for regex in training_data.regex_features
-        if regex["name"] in training_data.entities
-    ]
-
-
 def extract_patterns(
-        training_data: TrainingData,
-        use_lookup_tables: bool = True,
-        use_regexes: bool = True,
-        use_only_entities: bool = False,
+    training_data: TrainingData,
+    use_lookup_tables: bool = True,
+    use_regexes: bool = True,
+    use_only_entities: bool = False,
 ) -> List[Dict[Text, Text]]:
     """Extract a list of patterns from the training data.
 
@@ -157,7 +100,7 @@ def extract_patterns(
     patterns = []
 
     if use_regexes:
-        patterns.extend(_collect_regex_features(training_data, use_only_entities))
+        patterns.extend(pattern_utils._collect_regex_features(training_data, use_only_entities))
     if use_lookup_tables:
         patterns.extend(
             _convert_lookup_tables_to_regex(training_data, use_only_entities)
@@ -203,67 +146,28 @@ class RegexEntityExtractorCustom(EntityExtractor):
         )
 
         if not self.patterns:
-            rasa.utils.common.raise_warning(
+            rasa.shared.utils.io.raise_warning(
                 "No lookup tables or regexes defined in the training data that have "
                 "a name equal to any entity in the training data. In order for this "
                 "component to work you need to define valid lookup tables or regexes "
                 "in the training data."
             )
 
-    def process(self, message: Message, **kwargs: Any) -> None:
-        if not self.patterns:
-            return
-
-        extracted_entities = self._extract_entities(message)
-        extracted_entities = self.add_extractor_name(extracted_entities)
-
-        message.set(
-            ENTITIES, message.get(ENTITIES, []) + extracted_entities, add_to_output=True
-        )
-
-    def _extract_entities(self, message: Message) -> List[Dict[Text, Any]]:
-        """Extract entities of the given type from the given user message."""
-        entities = []
-
-        flags = 0  # default flag
-        if not self.case_sensitive:
-            flags = re.IGNORECASE
-
-        for pattern in self.patterns:
-            matches = re.finditer(pattern["pattern"], message.get(TEXT), flags=flags)
-            matches = list(matches)
-
-            for match in matches:
-                start_index = match.start()
-                end_index = match.end()
-                entities.append(
-                    {
-                        ENTITY_ATTRIBUTE_TYPE: pattern["name"],
-                        ENTITY_ATTRIBUTE_START: start_index,
-                        ENTITY_ATTRIBUTE_END: end_index,
-                        ENTITY_ATTRIBUTE_VALUE: message.get(TEXT)[
-                                                start_index:end_index
-                                                ],
-                    }
-                )
-
-        return entities
-
     @classmethod
     def load(
-            cls,
-            meta: Dict[Text, Any],
-            model_dir: Optional[Text] = None,
-            model_metadata: Optional[Metadata] = None,
-            cached_component: Optional["RegexEntityExtractor"] = None,
-            **kwargs: Any,
+        cls,
+        meta: Dict[Text, Any],
+        model_dir: Optional[Text] = None,
+        model_metadata: Optional[Metadata] = None,
+        cached_component: Optional["RegexEntityExtractor"] = None,
+        **kwargs: Any,
     ) -> "RegexEntityExtractorCustom":
 
         file_name = meta.get("file")
         regex_file = os.path.join(model_dir, file_name)
 
         if os.path.exists(regex_file):
-            patterns = rasa.utils.io.read_json_file(regex_file)
+            patterns = rasa.shared.utils.io.read_json_file(regex_file)
             return RegexEntityExtractorCustom(meta, patterns=patterns)
 
         return RegexEntityExtractorCustom(meta)
@@ -273,6 +177,6 @@ class RegexEntityExtractorCustom(EntityExtractor):
         Return the metadata necessary to load the model again."""
         file_name = f"{file_name}.json"
         regex_file = os.path.join(model_dir, file_name)
-        rasa.utils.io.dump_obj_as_json_to_file(regex_file, self.patterns)
+        rasa.shared.utils.io.dump_obj_as_json_to_file(regex_file, self.patterns)
 
         return {"file": file_name}

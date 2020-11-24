@@ -105,8 +105,8 @@ class Preprocessing(Component):
 
         # remove apostrophe from the phrase (important be first than s_regex regex)
         for APOSTROPHE in APOSTROPHE_OPTIONS:
-            message.text = message.text.replace(APOSTROPHE, "")
+            message.data['text'] = message.data['text'].replace(APOSTROPHE, "")
 
         PREPROCESS_FACTORY = PreprocessingFactory().get_preprocess(self.language)
 
-        message.text = PREPROCESS_FACTORY.preprocess(message.text)
+        message.data['text'] = PREPROCESS_FACTORY.preprocess(message.data['text'])

@@ -3,7 +3,7 @@ from recognizers_suite import recognize_number, recognize_ordinal, recognize_age
 from recognizers_suite import Culture, ModelResult
 
 from typing import Any, Dict, Text, Optional
-from rasa.nlu.constants import ENTITIES
+from rasa.shared.nlu.constants import ENTITIES
 from rasa.nlu.config import RasaNLUModelConfig
 from rasa.nlu.extractors.extractor import EntityExtractor
 from rasa.shared.nlu.training_data.message import Message

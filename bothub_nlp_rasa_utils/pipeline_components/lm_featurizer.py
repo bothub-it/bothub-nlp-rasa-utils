@@ -55,13 +55,10 @@ class LanguageModelFeaturizerCustom(LanguageModelFeaturizer):
         from .registry import (
             model_class_dict,
             model_weights_defaults,
-            model_tokenizer_dict,
-            from_pt_dict,
         )
 
         self.model_name = self.component_config["model_name"]
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa")
-        print(self.model_name)
+
         if self.model_name not in model_class_dict:
             raise KeyError(
                 f"'{self.model_name}' not a valid model name. Choose from "
