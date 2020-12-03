@@ -249,6 +249,7 @@ def plot_and_save_charts(update, intent_results):  # pragma: no cover
     from botocore.exceptions import ClientError
     from decouple import config
 
+    aws_access_endpoint_url = config("BOTHUB_NLP_AWS_ACCESS_ENDPOINT_URL", default=None)
     aws_access_key_id = config("BOTHUB_NLP_AWS_ACCESS_KEY_ID", default="")
     aws_secret_access_key = config("BOTHUB_NLP_AWS_SECRET_ACCESS_KEY", default="")
     aws_bucket_name = config("BOTHUB_NLP_AWS_S3_BUCKET_NAME", default="")
@@ -282,6 +283,7 @@ def plot_and_save_charts(update, intent_results):  # pragma: no cover
 
         s3_client = boto3.client(
             "s3",
+            endpoint_url=aws_access_endpoint_url,
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             region_name=aws_region_name,
