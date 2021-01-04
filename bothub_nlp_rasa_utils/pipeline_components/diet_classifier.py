@@ -1,4 +1,5 @@
-import rasa.utils.common as common_utils
+import rasa.shared.utils.io
+
 from rasa.nlu.classifiers.diet_classifier import DIETClassifier
 from rasa.shared.constants import DOCS_URL_TRAINING_DATA_NLU
 from rasa.shared.nlu.training_data.training_data import TrainingData
@@ -38,8 +39,8 @@ class DIETClassifierCustom(DIETClassifier):
                     entity_start not in token_start_positions
                     or entity_end not in token_end_positions
                 ):
-                    common_utils.raise_warning(
-                        f"Misaligned entity annotation in message '{example.text}' "
+                    rasa.shared.utils.io.raise_warning(
+                        f"Misaligned entity annotation in message '{example.data['text']}' "
                         f"with intent '{example.get(INTENT)}'. Make sure the start and "
                         f"end values of entities in the training data match the token "
                         f"boundaries (e.g. entities don't include trailing whitespaces "
